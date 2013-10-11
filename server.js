@@ -4,7 +4,7 @@ var config = require("./config.json"),
 	dbs = require("./libs/connectDbs.js"),
 	app = express();
 
-config.server.port = process.env.PORT || config.server.port;
+config.server.port = process.env.PORT || config.server.port || 6000;
 config.server.public_dir = process.env.PUBLIC_DIR || config.server.public_dir;
 
 app.configure(function(){
