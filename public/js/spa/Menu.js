@@ -26,7 +26,16 @@ define([
 						this.app.showLoginForm();
 						break;
 					case "home":
-						this.app.showHome();
+						this.app.showBoard();
+						break;
+					case "project":
+						this.app.showProjectForm();
+						break;
+					case "monitor":
+						this.app.showMonitor();
+						break;
+					case "prediction":
+						this.app.showPrediction();
 						break;
 				}
 			}

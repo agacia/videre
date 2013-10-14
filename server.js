@@ -31,11 +31,11 @@ app.configure("development", function() {
 
 dbs.connect(config.dbs, function(errs, clients){
 	var db;
-	if(errs){
-		for(db in errs){
+	if (errs) {
+		for (db in errs) {
 			console.log("Error: db[" + db + "] " + errs[db]);
 		}
-	}else{
+	} else {
 		routes.load(app, clients);
 		app.listen(config.server.port);
 		console.log("App listening on port: " + config.server.port);

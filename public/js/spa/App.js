@@ -1,10 +1,13 @@
 define([
 	"spa/Layout",
 	"spa/Menu",
-	"spa/Hello",
+	"spa/Board",
+	"spa/Project",
+	"spa/Monitor",
+	"spa/Prediction",
 	"spa/Login"
 	], 
-	function(Layout, Menu, Hello, Login){
+	function(Layout, Menu, Board, Project, Monitor, Prediction, Login){
 	var App = Backbone.Marionette.Application.extend({
 		init: function(){
 			this.layout = new Layout();
@@ -12,15 +15,28 @@ define([
 			this.layout.menu.show(new Menu({
 				app: this
 			}));
-			this.layout.content.show(new Hello());
+			this.layout.content.show(new Board());
+		},
+		showBoard: function(){
+			this.layout.content.show(new Board());
+		},
+		showProjectForm: function(){
+			console.log("get project list and render project selection view, this", this)
+			this.layout.content.show(new Project());
+		},
+		loadProject: function(){
+			console.log("load project and scenario data")
+		},
+		showMonitor: function(){
+			this.layout.content.show(new Monitor());
+		},
+		showPrediction: function(){
+			this.layout.content.show(new Prediction());
 		},
 		showLoginForm: function(){
 			this.layout.content.show(new Login({
 				app: this
 			}));
-		},
-		showHome: function(){
-			this.layout.content.show(new Hello());
 		},
 		login: function(username, password, cbError, cbSuccess){
 			var app = this,

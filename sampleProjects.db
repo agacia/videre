@@ -1,0 +1,38 @@
+{
+	"210W":
+	{
+		"projectname":"210W",
+		"id":"210W",
+		"scenarios": [
+			{
+				"scenarioname":"scenario_b",
+				"id":"scenario_b",
+				"realtime": ["20130717", "20130722"]
+			}
+		]
+	},
+	"80S":
+	{
+		"projectname":"80S",
+		"id":"80S",
+		"scenarios": [
+			{
+				"scenarioname":"scenario_b",
+				"id":"scenario_b",
+				"realtime": ["20130717", "20130722"]
+			}
+		]
+	},
+	"150N":
+	{
+		"projectname":"150N",
+		"id":"150N",
+		"scenarios": [
+			{
+				"scenarioname":"scenario_b",
+				"id":"scenario_b",
+				"realtime": ["20130717", "20130722"]
+			}
+		]
+	}
+}

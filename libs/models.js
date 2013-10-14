@@ -20,6 +20,13 @@
 					this.e("Property[", property, "] should be a string");
 				}
 				return this;
+			},
+			isArray: function (property){
+				// console.log("typeof (this.obj[property]", this.obj[property], typeof (this.obj[property]));
+				if(typeof (this.obj[property]) !== "array"){
+					this.e("Property[", property, "] should be an array");
+				}
+				return this;
 			}
 		},
 		normalize = {
@@ -56,6 +63,7 @@
 			errors.notFalsy = cheking.notFalsy;
 			errors.isString = cheking.isString;
 			errors.isNumber = cheking.isNumber;
+			errors.isArray = cheking.isArray;
 			return errors;
 		},
 		normalize: function(obj){
