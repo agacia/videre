@@ -20,13 +20,15 @@
 					});
 				},
 				read: function(project, cb){
-					console.log("read project", project)
-					var proj = db.kv(project.id);
-					if(!proj){
-						cb(["Project not found"]);
-					}else{
-						cb(undefined, proj);
-					}
+					var projectname = project.projectname;
+					var scenarioname = project.scenarioname;
+					db.readScenario(projectname, scenarioname, function(err, scenario) {
+						if(!scenario){
+							cb(["Scenario not found"]);
+						}else{
+							cb(null, db.getDb().scenario);
+						}
+					});
 				},
 				update: function(project, cb){
 					projectModel.validateUpdate(project, function(err, proj){
@@ -58,17 +60,7 @@
 					db.del(project.id, cb);
 				},
 				list: function(cb) {
-					var projects = db.getDb(),
-						project,
-						projectsList = [];
-					for (project in projects) {
-						// projectsList.push({
-						// 	id: projects[project].id,
-						// 	projectname: projects[project].projectname
-						// });
- 						projectsList.push(projects[project]);
-					}
-					cb(undefined, projectsList);
+					cb(undefined, db.getDb().projects);
 				}
 			};
 		}

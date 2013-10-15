@@ -4,6 +4,10 @@
 		"public_dir": "public"
 	},
 	"dbs": {
+		"fileSystem" : {
+			"type": "filesystem",
+			"url": "dir:./projects"
+		},
 		"sampleUsers": {
 			"type": "mock",
 			"url": "file:./sampleUsers.db"

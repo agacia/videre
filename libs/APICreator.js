@@ -19,11 +19,21 @@
 
 			return API;
 		},
-		createMiddleware = function(name, component, options) {
+		createMiddleware = function(name, component, options) {			
 			return function(req, res, next) {
 				var params = [];
 				if (component[name].length === 2) {
-					params.push(req.method === "GET" ? req.query : req.body);
+					if (req.method === "GET") {
+						// xxx added params to handle ajax routes
+						if (req.params) {
+							params.push(req.params);
+						} else {
+							params.push(req.query);
+						}
+					}
+					else {
+						params.push(req.body);
+					}
 				}
 				params.push(function(err, ret) {
 					if (err) {

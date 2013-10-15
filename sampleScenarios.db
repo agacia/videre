@@ -1,0 +1,24 @@
+{
+	"210W_scenario_b":
+	{
+		"id":"210W_scenario_b",
+		"scenarioname":"210W_scenario_b",
+		"filename":"210W_scenario_b.xml",
+		"boundries": 
+		{
+			"top":"",
+			"left":"",
+			"bottom":"",
+			"right":""
+		}	
+		"networks": [
+			{
+				"description" : "",
+				"nodes": [],
+				"links": []
+			}
+		],
+		"events":[],
+		"controllers":[]
+	}
+}

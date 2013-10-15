@@ -1,5 +1,6 @@
 var exports = module.exports = (function(){
 	var fs = require("fs"),
+		xmlparser = require('xml2json'),
 		dbs = {};
 
 	return {
@@ -58,6 +59,10 @@ var exports = module.exports = (function(){
 							if (stat.isFile()){
 								fs.readFile(path,function(err, data){
 									try{
+										if ((/\.(xml)$/i).test(path)) {
+											console.log("xml file");
+											data = xmlparser.toJson(data); 
+										}
 										db = JSON.parse(data);
 									}catch(e){
 										cb("Error: Bad json: \n" + data + '\n' + e);

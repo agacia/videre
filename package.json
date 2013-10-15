@@ -1,28 +1,24 @@
 {
-  "name": "app-name",
+  "name": "aVidere",
   "version": "0.0.1",
-  "author": "Picanteverde <picanteverde@gmail.com>",
-  "description": "a simple description",
-  "contributors": [
-    {
-      "name": "Alejandro Hernandez",
-      "email": "picanteverde@gmail.com",
-      "web": "http://picanteverde.wordpress.com/"
-    }
-  ],
+  "author": "Agata Grzybek <agatagrzybek@gmail.com>",
+  "description": "Visualisation of traffic management strategies",
   "repository": {
     "type": "git",
-    "url": "https://github.com/picanteverde/init.git"
+    "url": "https://github.com/agacia/videre.git"
   },
   "keywords": [
-    "init",
+    "videre",
+    "visualisation",
     "node",
     "app"
   ],
   "dependencies": {
     "express": "~3.1.0",
     "pg": "~0.14.1",
-    "mongodb": "~1.2.14"
+    "mongodb": "~1.2.14",
+    "xml2json": "*",
+    "d3": "3.2.7"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

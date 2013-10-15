@@ -1,16 +1,17 @@
 (function() {
-	var  simple = require("./components/simple/routes.js")
-		,dummy = require("./components/dummy/index.js")
-		,middlewarize = require("./libs/APICreator.js")
-		,Users = require("./components/users/index.js")
-		,Projects = require("./components/projects/index.js")
-		,RestfulAuth = require("./components/restfulauth/index.js");
+	var  simple = require("./components/simple/routes.js"),
+		dummy = require("./components/dummy/index.js"),
+		middlewarize = require("./libs/APICreator.js"),
+		Users = require("./components/users/index.js"),
+		Projects = require("./components/projects/index.js"),
+		RestfulAuth = require("./components/restfulauth/index.js");
 
 	module.exports = {
 		load: function(app, dbs) {
-			var users = Users.init(dbs["sampleUsers"])
-				projects = Projects.init(dbs["sampleProjects"])
-				,restfulauth = RestfulAuth.init(users);
+			var users = Users.init(dbs["sampleUsers"]),
+				// projects = Projects.init(dbs["sampleProjects"])
+				projects = Projects.init(dbs["fileSystem"]),
+				restfulauth = RestfulAuth.init(users);
 
 			users.api = middlewarize.createAPI(users);
 			projects.api = middlewarize.createAPI(projects);

@@ -17,9 +17,10 @@ define([
 			}));
 			this.layout.content.show(new Board());
 			this.loadProjects(null, null);
+			this.monitors = [];
 
 		},
-		loadProjects: function(cbSuccess, cdError) {
+		loadProjects: function(cbError, cbSuccess) {
 			var app = this;
 			$.ajax({
 				url: "/listProjects",
@@ -28,15 +29,15 @@ define([
 					401: function (data){
 						data = JSON.parse(data.responseText);
 						if (typeof cbError === "function") {
-					       cbError(data.error);
-					    }
+						   cbError(data.error);
+						}
 					}
 				},
 				success: function(data){
 					app.projects = data;
 					if (typeof cbSuccess === "function") {
-				        cbSuccess();
-				    }
+						cbSuccess();
+					}
 				}
 			});
 		},
@@ -49,35 +50,35 @@ define([
 			}
 			else {
 				var app = this;
-				this.loadProjects(function() {
+				this.loadProjects(null, function() {
 					app.layout.content.show(new Project({app: app}));
 				});
 			}
 		},
-		loadProject: function(projectname, scenarioname, cbSuccess, cdError){
+		loadProject: function(projectname, scenarioname, cbError, cbSuccess){
 			console.log("loading project and scenario data for ", projectname, scenarioname);
 			var app = this;
 			$.ajax({
 				url: "/readScenario/"+projectname+"/"+scenarioname,
 				type: "GET",
-				statusCode: {
-					401: function (data){
-						data = JSON.parse(data.responseText);
-						if (typeof cbError === "function") {
-					       cbError(data.error);
-					    }
-					}
+				error: function (data){
+					data = JSON.parse(data.responseText);
+					cbError(data.error);
 				},
 				success: function(data){
-					app.projects = data;
-					if (typeof cbSuccess === "function") {
-				        cbSuccess();
-				    }
+					app.scenario = data;
+					app.monitors.push(new Monitor({
+						app: app
+					}));
+					cbSuccess();
 				}
 			});
 		},
 		showMonitor: function(){
-			this.layout.content.show(new Monitor());
+			if (this.monitors.length > 0) {
+				this.layout.content.show(this.monitors[0]);
+			}
+			
 		},
 		showPrediction: function(){
 			this.layout.content.show(new Prediction());

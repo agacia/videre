@@ -2,6 +2,7 @@
 	var pg = require("pg"),
 		mongo = require("mongodb"),
 		mock = require("./mockDb"),
+		filesystem = require("./filesystemDb"),
 		connectTo = function(name, conn, error, success){
 			var drv,
 				cb = function(err, client, done){
@@ -20,6 +21,9 @@
 					break;
 				case "mock":
 					drv = mock.connect(conn.url, cb);
+					break;
+				case "filesystem":
+					drv = filesystem.connect(conn.url, cb);
 					break;
 			}
 		};

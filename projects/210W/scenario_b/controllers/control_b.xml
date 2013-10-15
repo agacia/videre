@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ControllerSet>
+	<controller dt="1200" type="IRM_ALINEA" id="-1" enabled="true">
+	  <targetElements>
+		<scenarioElement id="-289" type="link"/>
+	  </targetElements>
+	  <feedbackElements>
+		<scenarioElement id="-1" type="link" usage="mainlinelink"/>
+	  </feedbackElements>
+	</controller>
+</ControllerSet>
