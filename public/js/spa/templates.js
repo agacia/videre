@@ -24,5 +24,5 @@ this["JST"]["login.html"] = function(obj) {obj || (obj = {});var __t, __p = '', 
 }return __p};
 
 this["JST"]["menu.html"] = function(obj) {obj || (obj = {});var __t, __p = '', __e = _.escape;with (obj) {
-	__p += '<div class="navbar">\n  <div class="navbar-inner">\n    <a class="brand" href="#">Videre</a>\n    <ul class="nav">\n      <li class="active"><a href="#home">Home</a></li>\n      <li><a href="#project">Project</a></li>\n 	<li><a href="#monitor">Monitor</a></li>\n 	<li><a href="#prediction">Prediction</a></li>\n 	<li><a href="#login">Login</a></li>\n    </ul>\n  </div>\n</div>';
+	__p += '<div class="navbar">\n  <div class="navbar-inner">\n    <a class="brand" href="#">Videre</a>\n    <ul class="nav">\n      <li class="active"><a href="#home">Home</a></li>\n      <li><a href="#project">Project</a></li>\n 	<li><a href="#realtime">Real-time</a></li>\n 	<li><a href="#monitor">Monitor</a></li>\n 	<li><a href="#prediction">Prediction</a></li>\n 	<li><a href="#login">Login</a></li>\n    </ul>\n  </div>\n</div>';
 }return __p};

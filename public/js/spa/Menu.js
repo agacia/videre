@@ -31,8 +31,11 @@ define([
 					case "project":
 						this.app.showProjectForm();
 						break;
+					case "realtime":
+						this.app.showMonitor("realtime");
+						break;
 					case "monitor":
-						this.app.showMonitor();
+						this.app.showMonitor("historical");
 						break;
 					case "prediction":
 						this.app.showPrediction();
