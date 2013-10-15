@@ -14,7 +14,7 @@
 
 			users.api = middlewarize.createAPI(users);
 			projects.api = middlewarize.createAPI(projects);
-			
+
 			app.post("/api/auth", [restfulauth], dummy.ok);
 			app.post("/createUser", users.api.create);
 			app.get("/createUser", users.api.create);
@@ -25,6 +25,7 @@
 			app.get("/hello", simple.helloWorld);
 
 			app.get("/listProjects", projects.api.list);
+			app.get("/readScenario/:projectname/:scenarioname", projects.api.read);
 		}
 	};
 }());

@@ -5,8 +5,8 @@
 		"id":"210W",
 		"scenarios": [
 			{
-				"scenarioname":"scenario_b",
-				"id":"scenario_b",
+				"scenarioname":"210W_scenario_b",
+				"id":"210W_scenario_b",
 				"realtime": ["20130717", "20130722"]
 			}
 		]
@@ -17,8 +17,8 @@
 		"id":"80S",
 		"scenarios": [
 			{
-				"scenarioname":"scenario_b",
-				"id":"scenario_b",
+				"scenarioname":"80S_scenario_b",
+				"id":"80S_scenario_b",
 				"realtime": ["20130717", "20130722"]
 			}
 		]
@@ -29,8 +29,8 @@
 		"id":"150N",
 		"scenarios": [
 			{
-				"scenarioname":"scenario_b",
-				"id":"scenario_b",
+				"scenarioname":"150N_scenario_b",
+				"id":"150N_scenario_b",
 				"realtime": ["20130717", "20130722"]
 			}
 		]

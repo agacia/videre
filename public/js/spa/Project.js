@@ -4,14 +4,14 @@ define([
 	function(templates){
 		var Project = Backbone.Marionette.ItemView.extend({
 			initialize: function(){
-				console.log("Project.initialize this", this.options)
 				this.app = this.options.app;
 			},
 			template: function(){
 				return window.JST["project.html"];
 			},
 			events:{
-				"click button.btn.load": "load"
+				"click button.btn.load": "load",
+				"change select.projectname": "onChangeProjectname"
 			},
 			ui: {
 				projectname: "select.projectname",
@@ -19,12 +19,48 @@ define([
 				message: "div.message"
 			},
 			onShow: function(){
+				this.populateProjects(this.app.projects);
 				this.ui.projectname.focus();
+			},
+			populateProjects: function(projects) {
+			 	d3.select(this.ui.projectname.selector).selectAll("option").remove();
+				d3.select(this.ui.projectname.selector).selectAll("option")
+				    .data(projects).enter().append("option")
+			        .text(function(d) {
+			            return d.projectname;
+			        })
+			        .attr("value", function(d) {
+			            return d.projectname;
+			        });
+			    // select the first element from tle list
+			    if (projects.length > 0) {
+			        $(this.ui.projectname.selector).val(projects[0].projectname).change();
+			    }
+			},
+			populateScenarios: function(scenarios) {
+				d3.select(this.ui.scenarioname.selector).selectAll("option").remove();
+				d3.select(this.ui.scenarioname.selector).selectAll("option")
+				    .data(scenarios).enter().append("option")
+			        .text(function(d) {
+			            return d.scenarioname;
+			        })
+			        .attr("value", function(d) {
+			            return d.scenarioname;
+			        });
+			    // select the first element from tle list
+			    if (scenarios.length > 0) {
+			        $(this.ui.scenarioname.selector).val(scenarios[0].scenarioname).change();
+			    }
+			},
+			onChangeProjectname: function(){
+				var selectedProjectName = $( this.ui.projectname.selector+" option:selected" ).val();
+				var selectedProject = _.find(this.app.projects, function(obj) { return obj.projectname == selectedProjectName });
+				this.populateScenarios(selectedProject.scenarios);
 			},
 			load: function(e){
 				var that = this;
 				e.preventDefault();
-				this.app.load(
+				this.app.loadProject(
 					this.ui.projectname.val(),
 					this.ui.scenarioname.val(),
 					function(err){

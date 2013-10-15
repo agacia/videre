@@ -22,7 +22,6 @@
 				return this;
 			},
 			isArray: function (property){
-				// console.log("typeof (this.obj[property]", this.obj[property], typeof (this.obj[property]));
 				if(typeof (this.obj[property]) !== "array"){
 					this.e("Property[", property, "] should be an array");
 				}

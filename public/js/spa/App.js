@@ -16,16 +16,65 @@ define([
 				app: this
 			}));
 			this.layout.content.show(new Board());
+			this.loadProjects(null, null);
+
+		},
+		loadProjects: function(cbSuccess, cdError) {
+			var app = this;
+			$.ajax({
+				url: "/listProjects",
+				type: "GET",
+				statusCode: {
+					401: function (data){
+						data = JSON.parse(data.responseText);
+						if (typeof cbError === "function") {
+					       cbError(data.error);
+					    }
+					}
+				},
+				success: function(data){
+					app.projects = data;
+					if (typeof cbSuccess === "function") {
+				        cbSuccess();
+				    }
+				}
+			});
 		},
 		showBoard: function(){
 			this.layout.content.show(new Board());
 		},
 		showProjectForm: function(){
-			console.log("get project list and render project selection view, this", this)
-			this.layout.content.show(new Project());
+			if (this.projects) {
+				this.layout.content.show(new Project({app: this}));
+			}
+			else {
+				var app = this;
+				this.loadProjects(function() {
+					app.layout.content.show(new Project({app: app}));
+				});
+			}
 		},
-		loadProject: function(){
-			console.log("load project and scenario data")
+		loadProject: function(projectname, scenarioname, cbSuccess, cdError){
+			console.log("loading project and scenario data for ", projectname, scenarioname);
+			var app = this;
+			$.ajax({
+				url: "/readScenario/"+projectname+"/"+scenarioname,
+				type: "GET",
+				statusCode: {
+					401: function (data){
+						data = JSON.parse(data.responseText);
+						if (typeof cbError === "function") {
+					       cbError(data.error);
+					    }
+					}
+				},
+				success: function(data){
+					app.projects = data;
+					if (typeof cbSuccess === "function") {
+				        cbSuccess();
+				    }
+				}
+			});
 		},
 		showMonitor: function(){
 			this.layout.content.show(new Monitor());

@@ -20,6 +20,7 @@
 					});
 				},
 				read: function(project, cb){
+					console.log("read project", project)
 					var proj = db.kv(project.id);
 					if(!proj){
 						cb(["Project not found"]);
