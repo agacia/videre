@@ -35,7 +35,8 @@ define([
 					});
 				// select the first element from tle list
 				if (projects.length > 0) {
-					$(this.ui.projectname.selector).val(projects[0].projectname).change();
+					$(this.ui.projectname.selector).val(projects[0].projectname); //.change();
+					this.onChangeProjectname();
 				}
 			},
 			populateScenarios: function(scenarios) {
@@ -57,9 +58,6 @@ define([
 				var selectedProjectName = $( this.ui.projectname.selector+" option:selected" ).val();
 				var selectedProject = _.find(this.app.projects, function(obj) { return obj.projectname === selectedProjectName; });
 				this.populateScenarios(selectedProject.scenarios);
-			},
-			loader: function(e) {
-				console.log("loader show, this", this);
 			},
 			load: function(e){
 				var that = this;

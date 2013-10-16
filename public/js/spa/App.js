@@ -71,10 +71,11 @@ define([
 				}
 			});
 		},
-		showMonitor: function(){
+		showMonitor: function(options){
+			console.log("showMonitor", options);
 			if (this.monitors.length > 0) {
-				// this.monitors[0].layout.map.show(this.monitors[0].map);
 				this.layout.content.show(this.monitors[0].layout);
+				this.monitors[0].layout.map.show(this.monitors[0].map);
 			}
 		},
 		showPrediction: function(){

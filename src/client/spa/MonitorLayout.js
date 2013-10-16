@@ -8,8 +8,8 @@ define([
 			return window.JST["monitorlayout.html"];
 		  },
 		  regions: {
-		    map: "#map",
-		    chart: "#chart"
+		    map: ".map.container",
+		    chart: ".chart.container"
 		  }
 		});
 		return MonitorLayout;

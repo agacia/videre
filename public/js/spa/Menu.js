@@ -32,10 +32,10 @@ define([
 						this.app.showProjectForm();
 						break;
 					case "realtime":
-						this.app.showMonitor("realtime");
+						this.app.showMonitor({"mode":"realtime"});
 						break;
 					case "monitor":
-						this.app.showMonitor("historical");
+						this.app.showMonitor({"mode":"historical"});
 						break;
 					case "prediction":
 						this.app.showPrediction();
