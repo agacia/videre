@@ -3,11 +3,12 @@ define([
 	"spa/Menu",
 	"spa/Board",
 	"spa/Project",
-	"spa/Monitor",
+	"spa/MonitorLayout",
+	"spa/Map",
 	"spa/Prediction",
 	"spa/Login"
 	], 
-	function(Layout, Menu, Board, Project, Monitor, Prediction, Login){
+	function(Layout, Menu, Board, Project, MonitorLayout, Map, Prediction, Login){
 	var App = Backbone.Marionette.Application.extend({
 		init: function(){
 			this.layout = new Layout();
@@ -16,9 +17,8 @@ define([
 				app: this
 			}));
 			this.layout.content.show(new Board());
-			this.loadProjects(null, null);
+			this.loadProjects(null, function(){});
 			this.monitors = [];
-
 		},
 		loadProjects: function(cbError, cbSuccess) {
 			var app = this;
@@ -28,16 +28,13 @@ define([
 				statusCode: {
 					401: function (data){
 						data = JSON.parse(data.responseText);
-						if (typeof cbError === "function") {
-						   cbError(data.error);
-						}
+						cbError(data.error);
 					}
 				},
 				success: function(data){
 					app.projects = data;
-					if (typeof cbSuccess === "function") {
-						cbSuccess();
-					}
+					app.projectView = new Project({app: app});
+					cbSuccess();
 				}
 			});
 		},
@@ -46,17 +43,16 @@ define([
 		},
 		showProjectForm: function(){
 			if (this.projects) {
-				this.layout.content.show(new Project({app: this}));
+				this.layout.content.show(this.projectView);
 			}
 			else {
 				var app = this;
 				this.loadProjects(null, function() {
-					app.layout.content.show(new Project({app: app}));
+					app.layout.content.show(app.projectView);
 				});
 			}
 		},
 		loadProject: function(projectname, scenarioname, cbError, cbSuccess){
-			console.log("loading project and scenario data for ", projectname, scenarioname);
 			var app = this;
 			$.ajax({
 				url: "/readScenario/"+projectname+"/"+scenarioname,
@@ -67,18 +63,19 @@ define([
 				},
 				success: function(data){
 					app.scenario = data;
-					app.monitors.push(new Monitor({
-						app: app
-					}));
+					app.monitors.push({
+						"layout": new MonitorLayout({app: app}),
+						"map": new Map({app: app})
+					});
 					cbSuccess();
 				}
 			});
 		},
 		showMonitor: function(){
 			if (this.monitors.length > 0) {
-				this.layout.content.show(this.monitors[0]);
+				// this.monitors[0].layout.map.show(this.monitors[0].map);
+				this.layout.content.show(this.monitors[0].layout);
 			}
-			
 		},
 		showPrediction: function(){
 			this.layout.content.show(new Prediction());

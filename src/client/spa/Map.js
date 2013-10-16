@@ -2,9 +2,9 @@ define([
 	"spa/templates"
 	],
 	function(templates){
-		var Monitor = Backbone.Marionette.ItemView.extend({
+		var Map = Backbone.Marionette.ItemView.extend({
 			template: function(){
-				return window.JST["monitor.html"];
+				return window.JST["map.html"];
 			},
 			initialize: function(){
 				this.app = this.options.app;
@@ -26,5 +26,5 @@ define([
 				map.setView(new L.LatLng(34.1326, -117.9338),11); 
 			}
 		});	
-		return Monitor;
+		return Map;
 	});

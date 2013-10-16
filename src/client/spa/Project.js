@@ -16,7 +16,8 @@ define([
 			ui: {
 				projectname: "select.projectname",
 				scenarioname: "select.scenarioname",
-				message: "div.message"
+				message: "div.message",
+				btnload: ".btn.load"
 			},
 			onShow: function(){
 				this.populateProjects(this.app.projects);
@@ -57,8 +58,12 @@ define([
 				var selectedProject = _.find(this.app.projects, function(obj) { return obj.projectname === selectedProjectName; });
 				this.populateScenarios(selectedProject.scenarios);
 			},
+			loader: function(e) {
+				console.log("loader show, this", this);
+			},
 			load: function(e){
 				var that = this;
+				$(this.ui.btnload.selector).button('loading');
 				e.preventDefault();
 				this.app.loadProject(
 					this.ui.projectname.val(),
@@ -68,6 +73,7 @@ define([
 					},
 					function(){
 						that.ui.message.html("Project and scenario loaded! Go to realtime / monitor or prediction view");	
+						$(that.ui.btnload.selector).button('reset');
 					});
 			}
 		});
