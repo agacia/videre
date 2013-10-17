@@ -4,11 +4,12 @@ define([
 	"spa/Board",
 	"spa/Project",
 	"spa/MonitorLayout",
+	"spa/RealtimeLayout",
 	"spa/Map",
 	"spa/Prediction",
 	"spa/Login"
 	], 
-	function(Layout, Menu, Board, Project, MonitorLayout, Map, Prediction, Login){
+	function(Layout, Menu, Board, Project, MonitorLayout, RealtimeLayout, Map, Prediction, Login){
 	var App = Backbone.Marionette.Application.extend({
 		init: function(){
 			this.layout = new Layout();
@@ -18,7 +19,6 @@ define([
 			}));
 			this.layout.content.show(new Board());
 			this.loadProjects(null, function(){});
-			this.monitors = [];
 		},
 		loadProjects: function(cbError, cbSuccess) {
 			var app = this;
@@ -62,20 +62,36 @@ define([
 					cbError(data.error);
 				},
 				success: function(data){
+					var project = 
 					app.scenario = data;
-					app.monitors.push({
-						"layout": new MonitorLayout({app: app}),
-						"map": new Map({app: app})
-					});
+					app.selectedProjectname = projectname;
+					var selectedProject = _.find(app.projects, function(obj) { return obj.projectname === projectname; });
+					selectedProject.scenario = data
+					selectedProject.monitorlayout = new MonitorLayout({app: app});
+					selectedProject.realtimelayout = new RealtimeLayout({app: app}),
+					selectedProject.map = new Map({project: selectedProject})
 					cbSuccess();
 				}
 			});
 		},
 		showMonitor: function(options){
-			console.log("showMonitor", options);
-			if (this.monitors.length > 0) {
-				this.layout.content.show(this.monitors[0].layout);
-				this.monitors[0].layout.map.show(this.monitors[0].map);
+			for (var project in this.projects) {
+				var selectedProject;
+				if (this.projects[project].projectname === this.selectedProjectname) {
+					selectedProject = this.projects[project];
+					break;
+				}
+			}
+			if (selectedProject) {
+				var layout;
+				if (options.mode === "realtime") {
+					layout = selectedProject.realtimelayout;
+					}
+				else if (options.mode === "historical") {
+					layout = selectedProject.monitorlayout;
+				}
+				this.layout.content.show(layout);
+				layout.map.show(selectedProject.map);
 			}
 		},
 		showPrediction: function(){

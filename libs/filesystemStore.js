@@ -17,7 +17,8 @@ var exports = module.exports = (function(){
 									fs.readFile(xmlPath,function(err, data){
 										try{
 											data = xmlparser.toJson(data); 
-											db.scenario = JSON.parse(data);
+											var scenarioJson = JSON.parse(data);
+											db.scenario = obj.parseScenario(scenarioJson.scenario);
 										}catch(e){
 											cb("Error: Bad json: \n" + data + '\n' + e);
 										}
@@ -26,7 +27,164 @@ var exports = module.exports = (function(){
 								}
 							});
 						},
-						getDirNamesSync : function(root) {
+						// processScenario: function(scenario) {
+						// 	scenario.filename = "";
+						// 	scenario.boundries =
+						// 	{
+						// 		"top":"",
+						// 		"left":"",
+						// 		"bottom":"",
+						// 		"right":""
+						// 	};	
+						// 	for (var network in scenario.networks) {
+						// 		scenario.networks[network].nodes = [];
+						// 		scenario.networks[network].links = [];
+						// 	}
+						// },
+						parseScenario: function(data) {
+							var scenario = {};
+ 							scenario.old = data;
+    						scenario.name = data.name;
+    						scenario.id = data.id;
+    						scenario.file_name = data.name;
+    						scenario.networks = [];
+							// read networks
+							if (data.NetworkList.network && !data.NetworkList.network.length) {
+								// only one network
+								var network = obj.readNetwork(data.NetworkList.network)
+								scenario.networks.push(network)
+							}
+							if (data.NetworkList.network && data.NetworkList.network.length && data.NetworkList.network.length > 0) {
+								for (var i in data.NetworkList.network ) {
+									var network = obj.readNetwork(data.NetworkList.network [i])
+									scenario.networks.push(network)
+								}
+							}
+							//read sensors
+							scenario.sensors = []
+							if (data.SensorList && data.SensorList.sensor && data.SensorList.sensor.length && data.SensorList.sensor.length > 0) {
+								scenario.sensors = data.SensorList.sensor
+							}
+							//read events
+							scenario.events = []   
+							if (data.EventSet && data.EventSet.event && data.EventSet.event.length && data.EventSet.event.length > 0) {
+								scenario.events = data.EventSet.event
+							}
+							//read controllers
+							scenario.controllers = []
+							if (data.ControllerSet && data.ControllerSet.controller && data.ControllerSet.controller.length && data.ControllerSet.controller.length > 0) {
+								scenario.controllers = data.ControllerSet.controller 
+							}
+							if (scenario.networks.length > 0) {
+								scenario.x_center = scenario.networks[0].x_center; // oerwrite global center point for the whole scenario
+								scenario.y_center = scenario.networks[0].y_center; 
+							}
+							else {
+								scenario.x_center = -122.42;
+								scenario.y_center = 37.665;
+							}
+							scenario.zoom = 11; 
+							scenario.routes = this.readRoutes(scenario);
+							return scenario;
+						},	
+						readNetwork: function(net) {	
+							var network= {};
+							network.id = net.id;
+							network.name = net.name
+							network.x_center = net.position.point.lng;
+							network.y_center = net.position.point.lat;
+							// TODO read nodes
+							network.nodes = net.NodeList.node;
+							// decode google shapes
+							network.links = {}
+							network.links.type = "FeatureCollection"
+							network.links.features= []
+							links = net.LinkList.link
+							for (var i in links) {
+								feature = obj.createLinkFeature(links[i], network.nodes)
+								network.links.features.push(feature)
+							}
+							return network;
+						},
+						createLinkFeature : function(link, nodes) {
+							coordinates = []
+							if (link.shape) {
+								coordinates = obj.decodeLine(link.shape)
+							}
+							else {
+								coordinates = [obj.getNodeCoordinates(link.begin.node_id, nodes), obj.getNodeCoordinates(link.end.node_id, nodes)]
+							}
+							feature = { 
+								"type":"Feature", 
+								"properties": {"id":link.id, "length":link.length, "lane_offset":link.lane_offset, "lanes":link.lanes, type:link.type, "begin_node_id" : link.begin.node_id, "end_node_id":link.end.node_id},
+								"geometry": {"type":"LineString", "coordinates":coordinates}
+							}
+							return feature
+						},
+						readRoutes: function(scenario) {
+							var routes = [];
+							// mock if routes element does not exist in scenario
+							if (!scenario.routes) {
+								var route =    {
+									"id": "route1",
+									"name": "Freeway",
+									linkIds: [],
+									performance: []
+								};
+								var HOVroute =    {
+									"id": "route2",
+									"name": "HOV",
+									linkIds: [],
+									performance: []
+								};
+								var rampsRoute =    {
+									"id": "route3",
+									"name": "ramps",
+									linkIds: [],
+									performance: []
+								}
+								for (var i in scenario.networks) {
+									var network = scenario.networks[i];
+									for (var j in network.links.features) {
+										link = network.links.features[j];
+										if (link.properties.type == "freeway") {
+											route.linkIds.push(link.properties.id);
+										}
+										if (link.properties.type == "HOV") {
+											HOVroute.linkIds.push(link.properties.id);
+										}
+										if (link.properties.type == "onramp" || link.properties.type == "offramp") {
+											rampsRoute.linkIds.push(link.properties.id);
+										}
+									}
+								}
+								routes = [route, HOVroute, rampsRoute];
+							}
+							// calculate offset of subsequent links 
+							for (var i in routes) {
+								routes[i].offsets = [];
+								routes[i].links = [];
+								var offset = 0;
+								for (var j in routes[i].linkIds) {
+									var link = this.getLinkFromProject(scenario.networks, routes[i].linkIds[j]);
+									link.properties.offset = offset;
+									offset += link.properties.length;
+									routes[i].links.push(link);
+								}
+							}
+							return routes;
+						},
+						getLinkFromProject: function(networks, linkId) {
+							for (var i in networks) {
+								for (var j in networks[i].links.features) {
+									var link = networks[i].links.features[j];
+									if (link.properties.id === linkId) {
+										return link;
+									}
+								}
+							}
+						},
+						getDirNamesSync: function(root) {
 							var results = [];
 							var files = fs.readdirSync(root);
 							for(var i in files) {
@@ -84,6 +242,48 @@ var exports = module.exports = (function(){
 									});
 								});
 							});  
+						},
+						getNodeCoordinates : function(id, nodes) {
+							coordinates = []
+							for (var i in nodes) {
+								node = nodes[i]
+								if (node.id == id) {
+									coordinates = [node.position.point.lng, node.position.point.lat]
+									return coordinates
+								}
+							}
+						},
+						// This function is from Google's polyline utility.
+						// https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+						decodeLine : function(encoded) {
+							var len = encoded.length;
+							var index = 0;
+							var array = [];
+							var lat = 0;
+							var lng = 0;
+							while (index < len) {
+								var b;
+								var shift = 0;
+								var result = 0;
+								do {
+									b = encoded.charCodeAt(index++) - 63;
+									result |= (b & 0x1f) << shift;
+									shift += 5;
+								} while (b >= 0x20);
+								var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+								lat += dlat;
+								shift = 0;
+								result = 0;
+								do {
+									b = encoded.charCodeAt(index++) - 63;
+									result |= (b & 0x1f) << shift;
+									shift += 5;
+								} while (b >= 0x20);
+								var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+								lng += dlng;
+								array.push([lng * 1e-5, lat * 1e-5]);
+							}
+							return array;
 						},
 						listAll : function(dir, cb) {
 							var results = [];
