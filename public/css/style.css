@@ -85,6 +85,10 @@ bottom: 10px;
   width: 200px;
 }
 
+.control-group .controls .btn {
+  width: auto;
+}
+
 #route_select label {
 margin: 10px;
 }

@@ -82,9 +82,9 @@ define([
 			}
 			if (selectedProject) {
 				var layout;
-				if (options.mode === "realtime") {
+				if (options.mode === "real-time") {
 					layout = new RealtimeLayout({app: this});
-					}
+				}
 				else if (options.mode === "historical") {
 					layout = new MonitorLayout({app: this});
 				}
@@ -92,16 +92,30 @@ define([
 				layout.map.show(new Map({project: selectedProject}));
 			}
 			else {
-				this.layout.content.show(new Blank({
-					message : {
-						title : "No project",
-						details : "Please load project first."
-					}
-				}));
+				this.showBlank("View " + options.mode + " not available!");
 			}
 		},
+		showBlank: function(title) {
+			this.layout.content.show(new Blank({
+				title : title,
+				message : "No project!",
+				details : "Please load project first."
+			}));
+		},
 		showPrediction: function(){
-			this.layout.content.show(new Prediction());
+			for (var project in this.projects) {
+				var selectedProject;
+				if (this.projects[project].projectname === this.selectedProjectname) {
+					selectedProject = this.projects[project];
+					break;
+				}
+			}
+			if (selectedProject) {
+				this.layout.content.show(new Prediction());
+			}
+			else {
+				this.showBlank("View prediction not available!");
+			}
 		},
 		showLoginForm: function(){
 			this.layout.content.show(new Login({
