@@ -7,9 +7,10 @@ define([
 	"spa/RealtimeLayout",
 	"spa/Map",
 	"spa/Prediction",
-	"spa/Login"
+	"spa/Login",
+	"spa/Blank"
 	], 
-	function(Layout, Menu, Board, Project, MonitorLayout, RealtimeLayout, Map, Prediction, Login){
+	function(Layout, Menu, Board, Project, MonitorLayout, RealtimeLayout, Map, Prediction, Login, Blank){
 	var App = Backbone.Marionette.Application.extend({
 		init: function(){
 			this.layout = new Layout();
@@ -33,7 +34,6 @@ define([
 				},
 				success: function(data){
 					app.projects = data;
-					app.projectView = new Project({app: app});
 					cbSuccess();
 				}
 			});
@@ -43,12 +43,13 @@ define([
 		},
 		showProjectForm: function(){
 			if (this.projects) {
-				this.layout.content.show(this.projectView);
+				this.layout.content.show(new Project({app: this}));
 			}
 			else {
 				var app = this;
 				this.loadProjects(null, function() {
-					app.layout.content.show(app.projectView);
+					// app.layout.content.show(app.projectView);
+					this.layout.content.show(new Project({app: app}));
 				});
 			}
 		},
@@ -67,9 +68,6 @@ define([
 					app.selectedProjectname = projectname;
 					var selectedProject = _.find(app.projects, function(obj) { return obj.projectname === projectname; });
 					selectedProject.scenario = data
-					selectedProject.monitorlayout = new MonitorLayout({app: app});
-					selectedProject.realtimelayout = new RealtimeLayout({app: app}),
-					selectedProject.map = new Map({project: selectedProject})
 					cbSuccess();
 				}
 			});
@@ -85,13 +83,21 @@ define([
 			if (selectedProject) {
 				var layout;
 				if (options.mode === "realtime") {
-					layout = selectedProject.realtimelayout;
+					layout = new RealtimeLayout({app: this});
 					}
 				else if (options.mode === "historical") {
-					layout = selectedProject.monitorlayout;
+					layout = new MonitorLayout({app: this});
 				}
 				this.layout.content.show(layout);
-				layout.map.show(selectedProject.map);
+				layout.map.show(new Map({project: selectedProject}));
+			}
+			else {
+				this.layout.content.show(new Blank({
+					message : {
+						title : "No project",
+						details : "Please load project first."
+					}
+				}));
 			}
 		},
 		showPrediction: function(){

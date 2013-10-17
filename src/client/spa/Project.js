@@ -10,7 +10,8 @@ define([
 				return window.JST["project.html"];
 			},
 			events:{
-				"click button.btn.load": "load",
+				// "click button.btn.load": "load",
+				"submit": "load",
 				"change select.projectname": "onChangeProjectname"
 			},
 			ui: {
@@ -60,9 +61,9 @@ define([
 				this.populateScenarios(selectedProject.scenarios);
 			},
 			load: function(e){
+				e.preventDefault();
 				var that = this;
 				$(this.ui.btnload.selector).button('loading');
-				e.preventDefault();
 				this.app.loadProject(
 					this.ui.projectname.val(),
 					this.ui.scenarioname.val(),

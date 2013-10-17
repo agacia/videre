@@ -74,6 +74,17 @@ bottom: 10px;
 
 /* Monitor Controls */
 
+.control-label {
+  width: 120px;
+}
+.control-group .controls {
+  display: inline-block;
+}
+
+.control-group .controls * {
+  width: 200px;
+}
+
 #route_select label {
 margin: 10px;
 }

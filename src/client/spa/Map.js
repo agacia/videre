@@ -10,7 +10,7 @@ define([
 				console.log("Map.this", this);
 			},
 			template: function(){ // when clicked layout.show(...) 1
-				return window.JST["map.html"];
+				return window.JST["map.html","blank.html"];
 			},
 			onRender: function(){ // when clicked layout.show(...) 2
 			},
@@ -30,23 +30,20 @@ define([
 				});
 
 				this.initializeMap();
-				// if (this.timer) {
-				// 	clearTimeout(this.timer);
-				// }
-				// this.play();
+				this.play();
 			},
-			onBeforeClose: function(){ // not called
-				console.log("onBeforeClose");
+			onBeforeClose: function(){ 
+				this.pause();
 			},
 			events:{
-				// "change #pauseBtn": "pause"
-				// "change #playerBtn": "pause",
-				// "click #playerBtn": "pause",
-				// "click #playLabel": "pause"
+					// "change #pauseBtn": "pause"
+					// "change #playerBtn": "pause",
+					// "click #playerBtn": "pause",
+					// "click #playLabel": "pause"
 			},
 			ui: {
 				map: ".map_item",
-				clock: ".clock",
+				clock: "#clock",
 				playbtn: "#playBtn",
 				pausebtn: "#pauseBtn"
 			},
