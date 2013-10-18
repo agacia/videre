@@ -1,8 +1,29 @@
 <div class="monitor">
-	<div class="clock">
-		<label>Date</label>
-		<span id="available_dates">AVAILABLE DATES</span>
+	<div class="message">
 	</div>
-	<div class="map container">MAP CONTAINER</div>
-	<div class="chart container">CHART CONTAINER</div>
+	<div>
+		<div class="control-group">
+			<label class="control-label" for="selectAvailableDate">Date:</label>
+			<div class="controls">
+				<select class="select availabledate" name="selectAvailableDate"></select>
+			</div>
+		</div>
+		<!-- <div class="control-group">
+		  <label class="control-label" for="calender">Date:</label>
+		  <div class="controls input-append date calender" data-date-format="dd-mm-yyyy">
+		  	<input class="span2" name="calender" type="text" />
+		  	<span class="add-on"><i class="glyphicon glyphicon-th"></i></span>
+		  </div>
+		</div> -->
+		<label>Simulation time:</label>
+		<span class="clock">CLOCK</span>
+	</div>
+	<div class="player">
+		<span class="btn-group playerBtn" data-toggle="buttons">
+	        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
+	        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
+        </span>
+	</div>
+	<div class="map">MAP CONTAINER</div>
+	<div class="chart">CHART CONTAINER</div>
 </div>

@@ -72,7 +72,7 @@ bottom: 10px;
 }
 
 
-/* Monitor Controls */
+/* form */
 
 .control-label {
   width: 120px;
@@ -89,14 +89,14 @@ bottom: 10px;
   width: auto;
 }
 
-#route_select label {
-margin: 10px;
-}
-
-#route_select input {
+.route_selection input {
 margin: 8px;
 }
 
+/* calender */
+.input-append.date.calender .add-on i.glyphicon {
+  display: inline-block;
+}
 
 /* Maps */
 

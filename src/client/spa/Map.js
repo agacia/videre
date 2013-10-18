@@ -5,9 +5,7 @@ define([
 		var Map = Backbone.Marionette.ItemView.extend({
 			initialize: function(){ // called when constructor new Map()
 				this.project = this.options.project;
-				this.timerDelay = 1000;
 				this.mapId = "map_01";
-				console.log("Map.this", this);
 			},
 			template: function(){ // when clicked layout.show(...) 1
 				return window.JST["map.html"];
@@ -16,24 +14,7 @@ define([
 			},
 			onShow: function(){ // when clicked layout.show(...) 3
 				$(this.ui.map.selector).attr("id", this.mapId);
-				var that = this;
-				$(this.ui.playbtn.selector).on('change', function(e) {
-					// console.log("play playbtn checked", $(that.ui.playbtn.selector)[0].checked);
-					// console.log("play pause checked",  $(that.ui.pausebtn.selector)[0].checked);
-					// play only if not played yet
-					if ($(that.ui.playbtn.selector)[0].checked) { // true if change of play button to check
-						that.play();
-					}
-				});
-				$('#pauseBtn').on('change', function(e) {
-					that.pause();
-				});
-
 				this.initializeMap();
-				this.play();
-			},
-			onBeforeClose: function(){ 
-				this.pause();
 			},
 			events:{
 					// "change #pauseBtn": "pause"
@@ -43,17 +24,45 @@ define([
 			},
 			ui: {
 				map: ".map_item",
-				clock: "#clock",
-				playbtn: "#playBtn",
-				pausebtn: "#pauseBtn"
+				routeselect: ".route_select span"
 			},
 			initializeMap: function() {
 				this.map = new L.Map(this.mapId);
 				var layer = new L.StamenTileLayer("toner-lite");
 				this.map.addLayer(layer);
 				this.map.setView(new L.LatLng(this.project.scenario.y_center, this.project.scenario.x_center), this.project.scenario.zoom); 
+				// show route selection
+				this.initializeRouteSelection();
 				// ad d3 svg overlay
 				this.showPathsOverlay();
+			},
+			initializeRouteSelection: function() {
+				// populates checkboxes with route names
+				var routeSelect = d3.select(".route_selection span");
+				console.log("routeselect", routeSelect, "this.project.scenario.routes", this.project.scenario.routes);
+				routeSelect.selectAll("label").remove();
+				routeSelect.selectAll("input").remove();
+				routeSelect.selectAll("input")
+					.data(this.project.scenario.routes).enter()
+					.append('label')
+					.attr('for',function(d,i){ return d.id; })
+					.text(function(d) { return d.name; })
+					.append("input")
+					.attr("checked", true)
+					.attr("type", "checkbox")
+					.attr("id", function(d,i) { return d.id; })
+					.on("click", function() {
+						var ele = $(this);
+						var routeId = ele.attr("id");
+						if (ele.is(':checked')){
+							ele.attr('checked', true);
+							d3.select("g#"+routeId).style("display","block");
+						}
+						else {
+							ele.attr('checked', false);
+							d3.select("g#"+routeId).style("display","none");
+						}
+					});
 			},
 			showPathsOverlay: function() {
 				var overlayPane = d3.select(this.map.getPanes().overlayPane);
@@ -90,6 +99,9 @@ define([
 			},
 			clearPaths: function() {
 				this.svg.selectAll("g").remove();
+			},
+			updatePaths: function() {
+				console.log("Map called to update paths");
 			},
 			showPaths: function(route, collection, onclick) {
 				// create svg group  
@@ -221,26 +233,7 @@ define([
 				    this.project.scenario.routes[i].group.selectAll("path").attr("d", this.project.scenario.routes[i].path); 
 				} 
 			  }
-			},
-			updateClock: function() {
-				var date = new Date();
-				$(this.ui.clock.selector).text(date.getDate()  + "/" + (date.getMonth()+1) + "/" + date.getFullYear() + " " +  date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds());
-			},
-    		play: function() {
-			console.log("play");
-			var that = this;
-    			this.timer = setTimeout(function() {
-    				that.updateClock();
-    				that.play();
-    			}, this.timerDelay);
-			
-    		},
-    		pause: function() {
-    			console.log("pause");
-				if (this.timer) {
-					clearTimeout(this.timer);
-				}
-    		}
+			}
 		});	
 		return Map;
 	});

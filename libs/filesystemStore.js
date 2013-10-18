@@ -11,7 +11,8 @@ var exports = module.exports = (function(){
 					obj = {
 						readScenario: function(projectname, scenarioname, cb) {
 							// read xml scenario file 
-							var xmlPath = pathjs.join(root, projectname, scenarioname, scenarioname+".xml");
+							var scenarioPath = pathjs.join(root, projectname, scenarioname);
+							var xmlPath = pathjs.join(scenarioPath, scenarioname+".xml");
 							fs.lstat(xmlPath, function(err, stat){
 								if (stat.isFile()){
 									fs.readFile(xmlPath,function(err, data){
@@ -19,6 +20,8 @@ var exports = module.exports = (function(){
 											data = xmlparser.toJson(data); 
 											var scenarioJson = JSON.parse(data);
 											db.scenario = obj.parseScenario(scenarioJson.scenario);
+											db.scenario.realtime = obj.readAvailableDates(pathjs.join(scenarioPath, "real_time"));
+											db.scenario.prediction = obj.readAvailableDates(pathjs.join(scenarioPath, "prediction"));
 										}catch(e){
 											cb("Error: Bad json: \n" + data + '\n' + e);
 										}
@@ -27,20 +30,6 @@ var exports = module.exports = (function(){
 								}
 							});
 						},
-						// processScenario: function(scenario) {
-						// 	scenario.filename = "";
-						// 	scenario.boundries =
-						// 	{
-						// 		"top":"",
-						// 		"left":"",
-						// 		"bottom":"",
-						// 		"right":""
-						// 	};	
-						// 	for (var network in scenario.networks) {
-						// 		scenario.networks[network].nodes = [];
-						// 		scenario.networks[network].links = [];
-						// 	}
-						// },
 						parseScenario: function(data) {
 							var scenario = {};
  							scenario.old = data;
@@ -184,11 +173,26 @@ var exports = module.exports = (function(){
 								}
 							}
 						},
+						readAvailableDates: function(dirPath) {
+ 							var availableDateFolders = obj.getDirNamesSync(dirPath);
+							var availableDates = []
+							for (var i in availableDateFolders) {
+								var date = availableDateFolders[i];
+								var year = date.slice(0,4);
+								var month = +date.slice(4,6);
+								var day = date.slice(6,8);
+								var datetime = new Date(year, (month-1), day, 0, 0, 0, 0);
+								availableDates.push({
+									"folder": availableDateFolders[i],
+									"date": datetime});
+							}
+							return availableDates;
+						},
 						getDirNamesSync: function(root) {
 							var results = [];
 							var files = fs.readdirSync(root);
 							for(var i in files) {
-								var path = root + files[i];
+								var path = pathjs.join(root, files[i]);
 								var stat = fs.statSync(path);
 								if (stat.isDirectory()) {
 									results.push(files[i]);
@@ -200,7 +204,7 @@ var exports = module.exports = (function(){
 						  var results = [];
 						  var files = fs.readdirSync(root);
 						  for(var i in files) {
-							var path = root + '/' + files[i];
+							var path = pathjs.join(root, files[i]);
 								var stat = fs.statSync(path);
 								if (stat.isFile()) {
 								  var filename = files[i];

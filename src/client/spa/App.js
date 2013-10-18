@@ -63,24 +63,23 @@ define([
 					cbError(data.error);
 				},
 				success: function(data){
-					var project = 
-					app.scenario = data;
 					app.selectedProjectname = projectname;
 					var selectedProject = _.find(app.projects, function(obj) { return obj.projectname === projectname; });
 					selectedProject.scenario = data
+					console.log("loaded project", selectedProject)
 					cbSuccess();
 				}
 			});
 		},
 		showMonitor: function(options){
+			this.selectedProject = null;
 			for (var project in this.projects) {
-				var selectedProject;
 				if (this.projects[project].projectname === this.selectedProjectname) {
-					selectedProject = this.projects[project];
+					this.selectedProject = this.projects[project];
 					break;
 				}
 			}
-			if (selectedProject) {
+			if (this.selectedProject) {
 				var layout;
 				if (options.mode === "real-time") {
 					layout = new RealtimeLayout({app: this});
@@ -89,7 +88,6 @@ define([
 					layout = new MonitorLayout({app: this});
 				}
 				this.layout.content.show(layout);
-				layout.map.show(new Map({project: selectedProject}));
 			}
 			else {
 				this.showBlank("View " + options.mode + " not available!");
