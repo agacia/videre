@@ -32,7 +32,7 @@ var exports = module.exports = (function(){
 						},
 						parseScenario: function(data) {
 							var scenario = {};
- 							scenario.old = data;
+ 							//scenario.old = data;
     						scenario.name = data.name;
     						scenario.id = data.id;
     						scenario.file_name = data.name;
