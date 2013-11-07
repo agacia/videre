@@ -34,6 +34,7 @@ define([
 				},
 				success: function(data){
 					app.projects = data;
+					console.log("/listProjects data", data);
 					cbSuccess();
 				}
 			});
@@ -66,7 +67,22 @@ define([
 					app.selectedProjectname = projectname;
 					var selectedProject = _.find(app.projects, function(obj) { return obj.projectname === projectname; });
 					selectedProject.scenario = data
-					console.log("loaded project", selectedProject)
+					console.log("/readScenario", selectedProject)
+					cbSuccess();
+				}
+			});
+		},
+		loadData: function(projectname, scenarioname, date, cbError, cbSuccess){
+			var app = this;
+			$.ajax({
+				url: "/readScenarioData/"+projectname+"/"+scenarioname+"/"+date,
+				type: "GET",
+				error: function (data){
+					data = JSON.parse(data.responseText);
+					cbError(data.error);
+				},
+				success: function(data){
+					console.log("/readScenarioData response", data)
 					cbSuccess();
 				}
 			});

@@ -30,6 +30,19 @@
 						}
 					});
 				},
+				readData: function(project, cb){
+					console.log("in components/projects/index readData, project: ", project);
+					var projectname = project.projectname;
+					var scenarioname = project.scenarioname;
+					var date = project.date;
+					db.readScenarioData(projectname, scenarioname, date, function(err, scenario) {
+						if(!scenario){
+							cb(["Data not found"]);
+						} else {
+							cb(null, db.getDb().scenarioData);
+						}
+					});
+				},
 				update: function(project, cb){
 					projectModel.validateUpdate(project, function(err, proj){
 						var project;

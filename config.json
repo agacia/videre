@@ -11,10 +11,6 @@
 		"sampleUsers": {
 			"type": "mock",
 			"url": "file:./sampleUsers.db"
-		},
-		"sampleProjects": {
-			"type": "mock",
-			"url": "file:./sampleProjects.db"
 		}
 	}
 }

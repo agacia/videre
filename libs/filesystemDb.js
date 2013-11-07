@@ -9,7 +9,7 @@
 					fsStore.connectDb(arr[1], cb);
 				break;
 				default:
-				cb("Error: Unknown Type " + url + " Usage: [type]:[url] ");
+					cb("Error: Unknown Type " + url + " Usage: [type]:[url] ");
 			}
 		}
 	};

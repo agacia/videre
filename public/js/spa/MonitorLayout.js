@@ -12,24 +12,29 @@ define([
 				chart: ".chart"
 			},
 			ui: {
+				message: "div.message",
 				// calender: ".calender",
 				clock: ".clock",
 				playbtn: ".playBtn",
 				pausebtn: ".pauseBtn",
-				availabledate: ".select.availabledate"
+				availabledate: ".select.availabledate",
+				btnload: ".btn.load"
 			},
 			events: {
+				"submit": "load",
 				// "change .select.availabledate": "onChangeAvailableDate"
 			},
 			initialize: function(){
-				this.selectedProject = this.options.app.selectedProject; 
+				this.app = this.options.app; 
+				console.log("this.selectedProject ", this.app.selectedProject);
 				this.timerDelay = 1000;
 				var now = new Date();
 				this.simulationTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 				this.simulationSpeed = 1000;
+				this.loadedDates = [];
 			},
 			onShow: function(){ 
-				this.mapViewItem = new Map({project: this.selectedProject});
+				this.mapViewItem = new Map({project: this.app.selectedProject});
 				this.map.show(this.mapViewItem);
 				var that = this;
 				$(this.ui.playbtn.selector).on('change', function(e) {
@@ -41,7 +46,7 @@ define([
 					that.pause();
 				});
 				// this.initializeCalender();
-				this.populateAvailableDates(this.selectedProject.scenario.realtime);
+				this.populateAvailableDates(this.app.selectedProject.scenario.realtime);
 			},
 			onBeforeClose: function(){ 
 				this.pause();
@@ -68,6 +73,7 @@ define([
 				}
 			},
 			onChangeAvailableDate: function(date) {
+				this.pause();
 				var date = new Date($(this.ui.availabledate.selector+" option:selected" ).val());
 				// this.datepicker.data('datepicker').setValue(date);
 				this.onChangeDate(date);
@@ -76,7 +82,34 @@ define([
 				// var date = date.valueOf();   
 				// date = date + 7 * 3600 * 1000;
 				this.simulationTime = date;
-				this.updateClock();
+				if (this.simulationTime in this.loadedDates) {
+					console.log("data for the selected date " + date + " already loaded. Click play");
+				}
+				else {
+					console.log("click load button");
+
+				}
+				
+			},
+			load: function(e){
+				e.preventDefault();
+				var that = this;
+				$(this.ui.btnload.selector).button('loading');
+				var day = this.simulationTime.getDate() < 10 ? '0'+this.simulationTime.getDate() : this.simulationTime.getDate();
+				var month = +this.simulationTime.getMonth() + 1
+				month = this.simulationTime.getMonth() < 10 ? '0'+month : month;
+				var dateFolder = this.simulationTime.getFullYear()+month+day
+				this.app.loadData(
+					this.app.selectedProject.projectname,
+					this.app.selectedProject.scenario.name,
+					dateFolder,
+					function(err){
+						that.ui.message.html(err);
+					},
+					function(){
+						that.ui.message.html("Data loaded! Interact with the map and charts.");	
+						$(that.ui.btnload.selector).button('reset');
+					});
 			},
 			// initializeCalender: function() {
 			// 	// var today = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
@@ -117,8 +150,8 @@ define([
     			}, this.timerDelay);
     		},
     		pause: function() {
-    			console.log("pause");
 				if (this.timer) {
+	    			console.log("pause");
 					clearTimeout(this.timer);
 				}
     		}

@@ -1,14 +1,123 @@
 var exports = module.exports = (function(){
 	var fs = require("fs"),
 		xmlparser = require('xml2json'),
+		csvparser = require('csv'),
+		d3 = require('d3'),
 		pathjs = require('path'),
 		dbs = {};
-
 	return {
 		connectDb: function (root, cb){
 			if (dbs[root]===undefined){
-				var db={}, 
+				var db={},
+					realTimeFolderName = "real_time", 
+					dataFolderName = "data",
+					dataFileExt = "txt",
+					eventsFolderName = "events",
 					obj = {
+						readScenarioData: function(projectname, scenarioname, date, cb) {
+							// read xml scenario file 
+							var scenarioPath = pathjs.join(root, projectname, scenarioname, realTimeFolderName, date);
+							var jsonResponse = { "status" : "success" }
+							jsonResponse.data = { "data" : "dataarray"}
+							jsonResponse.events = { "events" : "dataarray"}
+							var dataPath = pathjs.join(scenarioPath, dataFolderName);
+							console.log("reading folder ", dataPath);	
+							obj.readDataFolder(dataPath, function(error, data) {
+								db.scenarioData = data;
+								cb(error, data);
+							});
+						},
+						readDataFolder: function(path, cb) {
+							try {
+								var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
+								var jsonArray = []
+								for (var i in dataFilenames) {
+									var filepath = pathjs.join(path, dataFilenames[i]);
+									var stats = fs.lstatSync(filepath);
+									if (stats.isFile()) {
+										var dataTvs = fs.readFileSync(filepath);
+										var data = d3.tsv.parse(dataTvs.toString());
+										jsonArray.push(
+										{
+											"file" : filepath,
+											"data" : data
+										});
+										if (jsonArray.length == dataFilenames.length) {
+											cb(undefined, jsonArray);
+										}
+									}
+								}
+							} catch(e) {
+								cb("Error: " + e);
+							}
+										// data.forEach(function(d) {
+										// 	var timeStampJSON = {}
+										// 	timeStampJSON.type = type;
+										// 	timeStampJSON.time = datetime.valueOf();
+										// 	timeStampJSON.data = {
+										// 		"link_id" : d.id,
+										// 		"density" : parseFloat(d.density),
+										// 		"flow" : parseFloat(d.flow),
+										// 		"speed" : parseFloat(d.speed),
+										// 		"delay" : parseFloat(d.delay)
+										// 	};
+										// 	jsonData.push(timeStampJSON)
+										// });
+										// try {
+											// var streamreader = fs.createReadStream()
+											// var inputFile = path + "/" + dataFilenames[i];
+											// var inStream = fs.createReadStream(inputFile);
+											// console.log("in ", inStream)
+											// fs.createWriteStream(path+'/sample.out')
+											// csvparser()
+											// 	.from.stream(fs.createReadStream(inputFile), { delimiter: '\t' })
+											// 	.to.array(function(data){
+											// 		console.log(data)
+											// 	})
+											// 	.transform(function(row){
+											// 		// console.log("row", row);
+											// 		row.unshift(row.pop());
+											// 		return row;
+											// 	})
+											// 	.on('record', function(row,index){
+											// 		// console.log('#'+index+' '+JSON.stringify(row));
+											// 	})
+											// 	.on('close', function(count){
+											// 		// when writing to a file, use the 'close' event
+											// 		// the 'end' event may fire before the file has been written
+											// 		console.log('Number of lines: '+count);
+											// 	})
+											// 	.on('error', function(error){
+											// 		console.log(error.message);
+											// 	});
+										// } catch(e) {
+										// 	cb("Error: Bad file: " + e);
+										// }
+							// 		}
+							// 	});
+							// }
+						},
+						readLines: function(input, func) {
+							var remaining = '';
+							input.on('data', function(data) {
+								remaining += data;
+								var index = remaining.indexOf('\n');
+								var last  = 0;
+								while (index > -1) {
+									var line = remaining.substring(last, index);
+									last = index + 1;
+									func(line);
+									index = remaining.indexOf('\n', last);
+								}
+								remaining = remaining.substring(last);
+							});
+
+							input.on('end', function() {
+								if (remaining.length > 0) {
+									func(remaining);
+								}
+							});
+						},
 						readScenario: function(projectname, scenarioname, cb) {
 							// read xml scenario file 
 							var scenarioPath = pathjs.join(root, projectname, scenarioname);
@@ -18,6 +127,9 @@ var exports = module.exports = (function(){
 									fs.readFile(xmlPath,function(err, data){
 										try{
 											data = xmlparser.toJson(data); 
+											if (data.name == "") {
+												datan.name = scenarioname;
+											}
 											var scenarioJson = JSON.parse(data);
 											db.scenario = obj.parseScenario(scenarioJson.scenario);
 											db.scenario.realtime = obj.readAvailableDates(pathjs.join(scenarioPath, "real_time"));

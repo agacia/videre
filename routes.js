@@ -27,6 +27,7 @@
 
 			app.get("/listProjects", projects.api.list);
 			app.get("/readScenario/:projectname/:scenarioname", projects.api.read);
+			app.get("/readScenarioData/:projectname/:scenarioname/:date", projects.api.readData);
 		}
 	};
 }());
