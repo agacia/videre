@@ -82,8 +82,7 @@ define([
 					cbError(data.error);
 				},
 				success: function(data){
-					console.log("/readScenarioData response", data)
-					cbSuccess();
+					cbSuccess(data);
 				}
 			});
 		},

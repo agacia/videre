@@ -36,10 +36,11 @@ var exports = module.exports = (function(){
 									var stats = fs.lstatSync(filepath);
 									if (stats.isFile()) {
 										var dataTvs = fs.readFileSync(filepath);
-										var data = d3.tsv.parse(dataTvs.toString());
+										var data = d3.tsv.parseRows(dataTvs.toString());
 										jsonArray.push(
 										{
 											"file" : filepath,
+											"fileName": dataFilenames[i],
 											"data" : data
 										});
 										if (jsonArray.length == dataFilenames.length) {

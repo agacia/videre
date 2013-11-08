@@ -34,7 +34,7 @@ define([
 				// show route selection
 				this.initializeRouteSelection();
 				// ad d3 svg overlay
-				this.showPathsOverlay();
+				this.initializePathsOverlay();
 			},
 			initializeRouteSelection: function() {
 				// populates checkboxes with route names
@@ -64,7 +64,7 @@ define([
 						}
 					});
 			},
-			showPathsOverlay: function() {
+			initializePathsOverlay: function() {
 				var overlayPane = d3.select(this.map.getPanes().overlayPane);
 				this.svg = overlayPane.append("svg");
 				this.svg
@@ -79,7 +79,7 @@ define([
 						"features": this.project.scenario.routes[i].links, 
 						"route_id": this.project.scenario.routes[i].id
 					};
-					this.showPaths(this.project.scenario.routes[i], routeCollection, null);
+					this.initializePaths(this.project.scenario.routes[i], routeCollection, null);
 				}
 				this.map.on("viewreset", this.reset, this);
 				this.reset();
@@ -100,10 +100,14 @@ define([
 			clearPaths: function() {
 				this.svg.selectAll("g").remove();
 			},
-			updatePaths: function() {
+			updatePaths: function(performanceData) {
 				console.log("Map called to update paths");
+				if (performanceData) {
+					
+					console.log("updating routes on the map")
+				}
 			},
-			showPaths: function(route, collection, onclick) {
+			initializePaths: function(route, collection, onclick) {
 				// create svg group  
 				this.project.scenario.bottomLeft = null;
 				this.project.scenario.topRight = null;
