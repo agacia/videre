@@ -74,12 +74,7 @@ define([
 					.style("margin-top", "0px");
 				 // show routes on the overlay
 				for (var i in this.project.scenario.routes) {
-					var routeCollection = {
-						"type":"FeatureCollection", 
-						"features": this.project.scenario.routes[i].links, 
-						"route_id": this.project.scenario.routes[i].id
-					};
-					this.initializePaths(this.project.scenario.routes[i], routeCollection, null);
+					this.initializePaths(this.project.scenario.routes[i], null);
 				}
 				this.map.on("viewreset", this.reset, this);
 				this.reset();
@@ -100,14 +95,45 @@ define([
 			clearPaths: function() {
 				this.svg.selectAll("g").remove();
 			},
-			updatePaths: function(performanceData) {
+			updatePaths: function(currentTime) {
 				console.log("Map called to update paths");
-				if (performanceData) {
-					
-					console.log("updating routes on the map")
+				// this.clearPaths();
+				for (var i in this.project.scenario.routes) {
+				// 	this.initializePaths(this.project.scenario.routes[i], currentTime, null);
+					var route = this.project.scenario.routes[i];
+					console.log("update route", route)
+					var collection = {
+						"type":"FeatureCollection", 
+						"features": route.links, 
+						"route_id": route.id
+					};
+
+					var feature = route.group.selectAll("path")
+						.data(route.links).enter();
+					console.log("feature: ", feature);
+
+					var that = this;
+					var feature = route.group.selectAll("path")
+						.data(route.links)
+						.style('stroke', function(d) {
+							if (currentTime) {
+								var speed = Math.random()*40;
+								return that.colorScale(speed);
+								// console.log("showing performance d", d);
+								// todo 
+							}
+							return "green";
+						});
 				}
+
+				this.reset();
 			},
-			initializePaths: function(route, collection, onclick) {
+			initializePaths: function(route, currentTime, onclick) {
+				var collection = {
+					"type":"FeatureCollection", 
+					"features": route.links, 
+					"route_id": route.id
+				};
 				// create svg group  
 				this.project.scenario.bottomLeft = null;
 				this.project.scenario.topRight = null;
@@ -179,11 +205,11 @@ define([
 				feature.attr("title", function(d) {
 					var tooltipText = "Route " + collection.route_id;
 					tooltipText += "\nlink: " +  d.properties.id + ", type: " + d.properties.type + ", offset: " + d.properties.offset + ", length: " + d.properties.length;
-					if (d.performance) {
-						tooltipText += "\nspeed: " + d.performance.data.speed;
-						tooltipText += "\nflow: " + d.performance.data.flow;
-						tooltipText += "\ndensity: " + d.performance.data.density;
-					}
+					// if (d.performance) {
+					// 	tooltipText += "\nspeed: " + d.performance.data.speed;
+					// 	tooltipText += "\nflow: " + d.performance.data.flow;
+					// 	tooltipText += "\ndensity: " + d.performance.data.density;
+					// }
 					return tooltipText;
 				});
 				$("path").tooltip({
@@ -191,32 +217,20 @@ define([
 					'placement': 'bottom'
 				});
 				feature.style('stroke-width', function(d) {
-					if (d.performance) { 
-						return d.performance.speed;
-					}
+					return Math.random()*10;
 				});
+				this.colorScale = d3.scale.linear()
+					.domain([0, 32])
+					.range(['red', 'green']);
+				var that = this;
 				feature.style('stroke', function(d) {
-					if (d.performance) { 
-						// todo read linktype and free-flow-speed/speed limit 
-						var color =  "green";
-						// freeway - free-flow-speed - 45mph - 25% - 10%
-						// others  - speed limit - 50% - 25% - 10%
-						// todo gradient
-						var speed = d.performance.speed;
-						var freeFlowSpeed = 80;
-						var linkType = "freeway";
-						if (speed < 0.1 * freeFlowSpeed) {
-							color = "black";
-						}
-						if (speed < 0.25 * freeFlowSpeed) {
-							color = "red";
-						}
-						if ( (linkType == "freeway" && speed < 45) || (linkType != "freeway" && speed < 0.5 * freeFlowSpeed)) {
-							color = "yellow";
-						}
-						// console.log('color', color)
-						return color;
+					if (currentTime) {
+						var speed = Math.random()*40;
+						return that.colorScale(speed);
+						// console.log("showing performance d", d);
+						// todo 
 					}
+					return "green";
 				})
 				//this.map.on("viewreset", this.reset, this);
 				//this.reset();

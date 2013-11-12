@@ -36,8 +36,20 @@ define([
 				this.loadedDates = {};
 				this.loadedData = {};
 				this.currentTime = 0;
+				
 			},
 			onShow: function() { 
+				this.contourPlotOptions = {
+					"canvasId" : this.ui.contourplot.selector,
+					"width": 500,
+					"height": 300,
+					"margin": {
+						"top": 0,
+						"left": 0,
+						"bottom": 20,
+						"right": 0
+					}
+				}
 				// show map with routes (without performance )
 				this.mapViewItem = new Map({project: this.app.selectedProject});
 				this.map.show(this.mapViewItem);
@@ -46,7 +58,7 @@ define([
 
 				// show empty visualisation board
 				this.initialiseSlider(0,0,1,1);
-				this.initialiseContourPlot(this.ui.contourplot.selector, 500, 300);
+				this.initialiseContourPlot(this.contourPlotOptions);
 			},
 			initialiseDateSelection: function() {
 				var that = this;
@@ -100,7 +112,7 @@ define([
 					this.loadedData = this.loadedDates[dateName];
 					$(this.ui.playbtn.selector).parent().removeClass('disabled');
 					$(this.ui.pausebtn.selector).parent().removeClass('disabled');
-					this.drawContourPlot(this.loadedData);
+					this.drawContourPlot(this.loadedData, this.contourPlotOptions);
 					this.onDataPerformanceUpdate();
 				}
 				else {
@@ -142,6 +154,9 @@ define([
 							data = _.sortBy(data, function(obj){ return obj.timestamp });
 							that.loadedDates[dateName] = data;
 							// todo cluster data to routes 
+
+							that.assignPerformanceData(data);
+
 							that.loadedData = data;
 							var startTime = data[0].timestamp;
 							var endTime = data[data.length-1].timestamp;
@@ -149,13 +164,31 @@ define([
 							that.simulationStep = secondTime - startTime;
 							that.currentTime = startTime;
 							that.initialiseSlider(that.currentTime, startTime, endTime, that.simulationStep);
-							that.drawContourPlot(that.loadedData);
+							that.drawContourPlot(that.loadedData, that.contourPlotOptions);
 							that.onDataPerformanceUpdate();
 						}
 						else {
 							that.ui.message.html("Empty data!");
 						}
 					});
+			},
+			assignPerformanceData: function(data) {
+				for (var routeId in this.app.selectedProject.scenario.routes) {
+					var route = this.app.selectedProject.scenario.routes[routeId];
+					for (var linkId in route.links) {
+						var link = route.links[linkId];
+						var linkPerformance = this.getPerformanceForLink(link.properties.id, data);
+						link.performance = linkPerformance;
+					}
+				}
+				console.log("routes with performance data ", this.app.selectedProject.scenario.routes)
+			},
+			getPerformanceForLink: function(linkId, performanceData) {
+				return {
+				"time0" : {"speed": 20, "density" : 1, "flow" : 2},
+				"time1" : {"speed": 20, "density" : 1, "flow" : 2} 
+				}
+				
 			},
 			initialiseSlider: function(value, min, max, step) {
 				if (this.slider) {
@@ -175,10 +208,10 @@ define([
 						var hour = Math.floor(that.currentTime / 3600);
 						var minute = Math.floor((that.currentTime % 3600) / 60);
 						var seconds = (that.currentTime % 3600) % 60;
-						console.log("hour", hour, "min", minute, "sec", seconds);
+						// console.log("hour", hour, "min", minute, "sec", seconds);
 						that.simulationDate = new Date(oldSimualtionDate.getFullYear(), oldSimualtionDate.getMonth(), oldSimualtionDate.getDate(),
 							hour, minute, seconds, 0);
-						console.log(that.currentTime, " -> " , that.simulationDate )
+						// console.log(that.currentTime, " -> " , that.simulationDate )
 						that.updateClock()
 						that.onDataPerformanceUpdate();
 				    });
@@ -229,7 +262,6 @@ define([
 				}
     		},
     		onDataPerformanceUpdate: function() {
-    			// console.log("onDataPerformanceUpdate ")
     			this.updateMap();
     		},
     		updateMap: function() {
@@ -239,23 +271,21 @@ define([
 	    			var timeScale = d3.scale.linear()
 							.range([0, width])
 							.domain([+data[0].timestamp,+data[data.length-1].timestamp]);
-					d3.select('#timebrush .handle')
-						.attr('transform',  "translate(" + timeScale(this.currentTime) + "," + 0 + ")");;
-					console.log("translate brush handle range [0", width, "], domain ",+data[0].timestamp,+data[data.length-1].timestamp, " scale(time) ", timeScale(this.currentTime) );
+					d3.select('.timebrush .brush-handle')
+						.attr('transform',  "translate(" + timeScale(this.currentTime) + "," + 0 + ")");
 					var currentTimeData = {};
 					for (var i = 0; i < data.length; i++) { 
 						if(data[i].timestamp === this.currentTime ) { 
 							currentTimeData = data[i]; 
 						} 
 					}
-	    			console.log("show on map only data for ", currentTimeData);
-
+	    			this.mapViewItem.updatePaths(this.currentTime);
 	    		}
     		},
-    		drawContourPlot: function(data) { // actually draws the contour plot with the loaded data
+    		drawContourPlot: function(data, options) { // actually draws the contour plot with the loaded data
     			if (data.length > 0) {
-	    			var width =  this.svgContourplot.attr('width');
-	    			var height =  this.svgContourplot.attr('height');
+	    			var width =  options.width;
+	    			var height =  options.height;
 
 	    			// scales
 	    			var x = d3.scale.linear()
@@ -267,6 +297,15 @@ define([
 					var colorScale = d3.scale.linear()
 						.domain([0, 32])
 						.range(['red', 'green']);
+
+					var xAxis = d3.svg.axis()
+						.scale(x)
+						.orient('bottom');
+
+					// console.log("translate axis", height - options.margin.bottom)
+					var gXAxis = this.svgContourplot.append("g")
+						// .attr('transform',  "translate(" + 0 + "," + height - options.margin.bottom + ")")
+						.call(xAxis);
 
 					var column = this.svgContourplot.selectAll("column")
 						.data(data)
@@ -309,46 +348,35 @@ define([
 							// d3.select("g#"+collection.route_id).selectAll("path").classed("hover", true)
 							// console.log("hover " + collection.route_id)
 						});;
-						console.log("contourplot for currentTime ", this.currentTime, " data ", data)
 				}
 
     		},
-    		initialiseContourPlot: function(cansvasId, width, height) { // draws an empty contourplot
+    		initialiseContourPlot: function(options) { // draws an empty contourplot
     			
-    			var margin = {top: 0, right: 0, bottom: 0, left: 00},
-				    width = width - margin.left - margin.right,
-				    height = height - margin.top - margin.bottom;
+    			var margin = options.margin;
     			
     			// timeline 
-    			this.svgTimebrush = d3.select("#timebrush").append("svg:svg")
-					.attr("width", width + margin.left + margin.right)
+    			this.svgTimebrush = d3.select(".timebrush").append("svg:svg")
+					.attr("width", options.width)
 					.attr("height", 50);
 				var groupTimebrush = this.svgTimebrush.append("g")
 					.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-				groupTimebrush.selectAll('.ticks')
-					.data([])
-					.enter()
-					.append('rect')
-					.attr("width", 5)
-					.attr("height", 10)	
-					.attr('x', function(d,i) {
-						return i*10;
-					});
+				
 				this.svgTimebrush.append('rect')
-					.attr('class', 'handle')
+					.attr('class', 'brush-handle')
 					.attr("width", 1)
-					.attr("height", height)
+					.attr("height", options.height)
 					.attr("x", 0)
 					.attr("y", 0);	
 				this.svgTimebrush.append('rect')
-					.attr('class', 'axis')
-					.attr("width", width)
+					.attr('class', 'brush-axis')
+					.attr("width", options.width)
 					.attr("height", 2);
 
     			// contourplot
-				this.svgContourplot = d3.select(cansvasId).append("svg:svg")
-					.attr("width", width + margin.left + margin.right)
-					.attr("height", height + margin.top + margin.bottom)
+				this.svgContourplot = d3.select(options.canvasId).append("svg:svg")
+					.attr("width", options.width)
+					.attr("height", options.height)
 				// var group = this.svgContourplot.append("g")
 				// 	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 				
@@ -357,7 +385,7 @@ define([
 					{"timestamp" : 10, "data" : [[0, 40, 1, 1],[1, 50, 1, 1],[2, 50, 1, 1]]},
 					{"timestamp" : 20, "data" : [[0, 70, 1, 1],[1, 80, 1, 10],[2, 90, 1, 1]]}
 				];
-				this.drawContourPlot(data);
+				this.drawContourPlot(data, options);
 		
 
 				// var row = this.svgContourplot.selectAll(".row")
