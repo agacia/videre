@@ -116,7 +116,7 @@ define([
 					this.onDataPerformanceUpdate();
 				}
 				else {
-					this.ui.message.html("Click the button Load to load data for the selected date.");
+					this.ui.message.html("Click the button Load to load data for the selected date " + date );
 				}
 			},
 			getDateName: function(date) {
@@ -130,6 +130,7 @@ define([
 				e.preventDefault();
 				var that = this;
 				$(this.ui.btnload.selector).button('loading');
+				console.log("requesting data for ", this.simulationDate, " date: ", this.getDateName(this.simulationDate))
 				this.app.loadData(
 					this.app.selectedProject.projectname,
 					this.app.selectedProject.scenario.name,
@@ -169,6 +170,7 @@ define([
 						}
 						else {
 							that.ui.message.html("Empty data!");
+							$(that.ui.btnload.selector).button('reset');
 						}
 					});
 			},
