@@ -21,7 +21,7 @@ var exports = module.exports = (function(){
 							jsonResponse.data = { "data" : "dataarray"}
 							jsonResponse.events = { "events" : "dataarray"}
 							var dataPath = pathjs.join(scenarioPath, dataFolderName);
-							console.log("reading folder ", dataPath);	
+							// console.log("reading folder ", dataPath);	
 							obj.readDataFolder(dataPath, function(error, data) {
 								db.scenarioData = data;
 								cb(error, data);
@@ -30,6 +30,7 @@ var exports = module.exports = (function(){
 						readDataFolder: function(path, cb) {
 							try {
 								var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
+								console.log("reading data files ", dataFilenames);
 								var jsonArray = []
 								for (var i in dataFilenames) {
 									var filepath = pathjs.join(path, dataFilenames[i]);
