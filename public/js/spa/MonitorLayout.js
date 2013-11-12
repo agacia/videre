@@ -120,7 +120,8 @@ define([
 				}
 			},
 			getDateName: function(date) {
-				var day = date.getDate() < 10 ? '0'+date.getDate() : date.getDate();
+				var day = date.getDate() + 1
+				day = day < 10 ? '0'+date.getDate() : date.getDate();
 				var month = +date.getMonth() + 1;
 				month = date.getMonth() < 10 ? '0'+month : month;
 				var dateFolder = date.getFullYear()+month+day;
