@@ -21,16 +21,24 @@ var exports = module.exports = (function(){
 							jsonResponse.data = { "data" : "dataarray"}
 							jsonResponse.events = { "events" : "dataarray"}
 							var dataPath = pathjs.join(scenarioPath, dataFolderName);
-							// console.log("reading folder ", dataPath);	
-							obj.readDataFolder(dataPath, function(error, data) {
-								db.scenarioData = data;
-								cb(error, data);
+							var dataReceived = 2 // performance + events
+							obj.readTsvDataFolder(dataPath, function(error, data) {
+								db.performance = data;
+								if (--dataReceived === 0) {
+									cb(error, db);
+								}
+							});
+							var eventsPath = pathjs.join(scenarioPath, eventsFolderName);
+							obj.readTsvDataFolder(eventsPath, function(error, data) {
+								db.events = data;
+								if (--dataReceived === 0) {
+									cb(error, db);
+								}
 							});
 						},
-						readDataFolder: function(path, cb) {
+						readTsvDataFolder: function(path, cb) {
 							try {
 								var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
-								console.log("reading data files ", dataFilenames);
 								var jsonArray = []
 								for (var i in dataFilenames) {
 									var filepath = pathjs.join(path, dataFilenames[i]);
@@ -274,6 +282,8 @@ var exports = module.exports = (function(){
 									offset += link.properties.length;
 									routes[i].links.push(link);
 								}
+								// console.log("routeid", routes[i].id)
+								// console.log("links ", routes[i].links.length)
 							}
 							return routes;
 						},

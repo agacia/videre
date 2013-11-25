@@ -39,7 +39,11 @@
 						if(!scenario){
 							cb(["Data not found"]);
 						} else {
-							cb(null, db.getDb().scenarioData);
+							var response = {
+								"performance" : db.getDb().performance,
+								"events": db.getDb().events
+							}
+							cb(null, response);
 						}
 					});
 				},

@@ -23,47 +23,21 @@ define([
 					// "click #playLabel": "pause"
 			},
 			ui: {
-				map: ".map_item",
-				routeselect: ".route_select span"
+				map: ".map_item"
+				//routeselect: ".route_select span"
+			},
+			setOptions: function(options) {
+				this.colorScale = options.colorScale;
 			},
 			initializeMap: function() {
 				this.map = new L.Map(this.mapId);
 				var layer = new L.StamenTileLayer("toner-lite");
 				this.map.addLayer(layer);
 				this.map.setView(new L.LatLng(this.project.scenario.y_center, this.project.scenario.x_center), this.project.scenario.zoom); 
-				// show route selection
-				this.initializeRouteSelection();
 				// ad d3 svg overlay
 				this.initializePathsOverlay();
 			},
-			initializeRouteSelection: function() {
-				// populates checkboxes with route names
-				var routeSelect = d3.select(".route_selection span");
-				console.log("routeselect", routeSelect, "this.project.scenario.routes", this.project.scenario.routes);
-				routeSelect.selectAll("label").remove();
-				routeSelect.selectAll("input").remove();
-				routeSelect.selectAll("input")
-					.data(this.project.scenario.routes).enter()
-					.append('label')
-					.attr('for',function(d,i){ return d.id; })
-					.text(function(d) { return d.name; })
-					.append("input")
-					.attr("checked", true)
-					.attr("type", "checkbox")
-					.attr("id", function(d,i) { return d.id; })
-					.on("click", function() {
-						var ele = $(this);
-						var routeId = ele.attr("id");
-						if (ele.is(':checked')){
-							ele.attr('checked', true);
-							d3.select("g#"+routeId).style("display","block");
-						}
-						else {
-							ele.attr('checked', false);
-							d3.select("g#"+routeId).style("display","none");
-						}
-					});
-			},
+			
 			initializePathsOverlay: function() {
 				var overlayPane = d3.select(this.map.getPanes().overlayPane);
 				this.svg = overlayPane.append("svg");
@@ -77,6 +51,9 @@ define([
 					this.initializePaths(this.project.scenario.routes[i], null);
 				}
 				this.map.on("viewreset", this.reset, this);
+				this.map.on("move", function() { console.log("map move"); }, this);
+
+				this.map.on("click", function() { console.log("map click"); }, this);
 				this.reset();
 			},
 			switchCoords: function(x) {
@@ -96,12 +73,12 @@ define([
 				this.svg.selectAll("g").remove();
 			},
 			updatePaths: function(currentTime) {
-				console.log("Map called to update paths");
+				// console.log("Map called to update paths");
 				// this.clearPaths();
 				for (var i in this.project.scenario.routes) {
 				// 	this.initializePaths(this.project.scenario.routes[i], currentTime, null);
 					var route = this.project.scenario.routes[i];
-					console.log("update route", route)
+					// console.log("update route", route)
 					var collection = {
 						"type":"FeatureCollection", 
 						"features": route.links, 
@@ -110,17 +87,18 @@ define([
 
 					var feature = route.group.selectAll("path")
 						.data(route.links).enter();
-					console.log("feature: ", feature);
+					// console.log("feature: ", feature);
 
 					var that = this;
 					var feature = route.group.selectAll("path")
 						.data(route.links)
 						.style('stroke', function(d) {
 							if (currentTime) {
-								var speed = Math.random()*40;
-								return that.colorScale(speed);
-								// console.log("showing performance d", d);
-								// todo 
+								for (var i in d.performance) {
+									if (d.performance[i]['timestamp'] == currentTime) {
+										return that.colorScale(d.performance[i]['speed']);
+									}
+								}
 							}
 							return "green";
 						});
@@ -184,6 +162,7 @@ define([
 				});
 				feature.on("click", function(d) {
 					//onclick(d, collection.route_id);]
+
 				});
 				// custom tooltips
 				//var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
@@ -205,11 +184,11 @@ define([
 				feature.attr("title", function(d) {
 					var tooltipText = "Route " + collection.route_id;
 					tooltipText += "\nlink: " +  d.properties.id + ", type: " + d.properties.type + ", offset: " + d.properties.offset + ", length: " + d.properties.length;
-					// if (d.performance) {
-					// 	tooltipText += "\nspeed: " + d.performance.data.speed;
-					// 	tooltipText += "\nflow: " + d.performance.data.flow;
-					// 	tooltipText += "\ndensity: " + d.performance.data.density;
-					// }
+					if (d.performance) {
+						tooltipText += "\nspeed: " + d.performance.data.speed;
+						tooltipText += "\nflow: " + d.performance.data.flow;
+						tooltipText += "\ndensity: " + d.performance.data.density;
+					}
 					return tooltipText;
 				});
 				$("path").tooltip({
@@ -219,9 +198,7 @@ define([
 				feature.style('stroke-width', function(d) {
 					return Math.random()*10;
 				});
-				this.colorScale = d3.scale.linear()
-					.domain([0, 32])
-					.range(['red', 'green']);
+				
 				var that = this;
 				feature.style('stroke', function(d) {
 					if (currentTime) {
@@ -233,9 +210,10 @@ define([
 					return "green";
 				})
 				//this.map.on("viewreset", this.reset, this);
-				//this.reset();
+				this.reset();
 			},
 			reset: function() {
+				console.log("Reset")
 			  for (var i in this.project.scenario.routes) {
 			    var bottomLeft = this.projection(this.project.scenario.bottomLeft),
 			          topRight = this.projection(this.project.scenario.topRight);

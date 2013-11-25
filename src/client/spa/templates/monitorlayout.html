@@ -1,47 +1,52 @@
 <div class="monitor">
 	<div class="message">
-	</div>
-	<div>		
+	</div>	
 
-	<div class="row">
-		<form class="form-horizontal">
-			<div class="control-group">
-				<label class="control-label" for="selectAvailableDate">Date:</label>
-				<div class="controls">
-					<select class="select availabledate" name="selectAvailableDate"></select>
-					<button type="submit" class="btn load">Load</button>
-				</div>
-			</div>
-		</form>
-		<!-- <div class="control-group">
-		  <label class="control-label" for="calender">Date:</label>
-		  <div class="controls input-append date calender" data-date-format="dd-mm-yyyy">
-		  	<input class="span2" name="calender" type="text" />
-		  	<span class="add-on"><i class="glyphicon glyphicon-th"></i></span>
-		  </div>
-		</div> -->
-		<label>Simulation time:</label>
-		<span class="clock">CLOCK</span>
-	</div>
-	<div class="player">
-		<span class="btn-group playerBtn" data-toggle="buttons">
-	        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
-	        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
-        </span>
-	</div>
-
+	
 	<div class="row">
 		<div class="col-xs-6">
+			<form class="form-horizontal">
+				<div class="control-group">
+					<label class="control-label" for="selectAvailableDate">Date:</label>
+					<div class="controls">
+						<select class="select availabledate" name="selectAvailableDate"></select>
+						<button type="submit" class="btn load">Load</button>
+					</div>
+				</div>
+			</form>
+			<!-- <div class="control-group">
+			  <label class="control-label" for="calender">Date:</label>
+			  <div class="controls input-append date calender" data-date-format="dd-mm-yyyy">
+			  	<input class="span2" name="calender" type="text" />
+			  	<span class="add-on"><i class="glyphicon glyphicon-th"></i></span>
+			  </div>
+			</div> -->
+			<label>Simulation time:</label>
+			<span class="clock">CLOCK</span>
+			<div class="player">
+				<span class="btn-group playerBtn" data-toggle="buttons">
+			        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
+			        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
+		        </span>
+			</div>
 			<div id="slider-wrapper"><div id="slider"></div></div>
 			<div class="map">MAP CONTAINER</div>
 		</div>
 		<div class="col-xs-6">
-			<div class="chart">CHART CONTAINER</div>
-			<div id="contourplot">
-				<span class="timebrush"></span>
+			<div class="row">
+				<p>Current events: <span class="event-timestamp"></span></p>
+				<div class="events-feed">		
 			</div>
+			<div class="chart">
+				<p>Please load data to show contourplots</p>
+			</div>
+			
 		</div>
 	</div>
+
+</div>
+
+
 	
 	
 	
