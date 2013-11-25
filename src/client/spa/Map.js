@@ -36,12 +36,13 @@ define([
 				this.map.setView(new L.LatLng(this.project.scenario.y_center, this.project.scenario.x_center), this.project.scenario.zoom); 
 				// ad d3 svg overlay
 				this.initializePathsOverlay();
+				this.initializeSensorsOverlay();
 			},
-			
 			initializePathsOverlay: function() {
 				var overlayPane = d3.select(this.map.getPanes().overlayPane);
-				this.svg = overlayPane.append("svg");
-				this.svg
+				this.svgRoutes = overlayPane.append("svg");
+				this.svgRoutes
+					.attr('class','routes')
 					.attr("width", $("#"+this.mapId).width())
 					.attr("height", $("#"+this.mapId).height())
 					.style("margin-left", "0px")
@@ -51,10 +52,70 @@ define([
 					this.initializePaths(this.project.scenario.routes[i], null);
 				}
 				this.map.on("viewreset", this.reset, this);
-				this.map.on("move", function() { console.log("map move"); }, this);
+				// this.reset();
+			},
+			initializeSensorsOverlay: function() {
+				var overlayPane = d3.select(this.map.getPanes().overlayPane);
+				this.svgSensors = overlayPane.append("svg");
+				this.svgSensors
+					.attr('class', 'sensors')
+					.attr("width", $("#"+this.mapId).width())
+					.attr("height", $("#"+this.mapId).height())
+					.style("margin-left", "0px")
+					.style("margin-top", "0px")
+					
+				// show routes on the overlay
+				console.log("this.project.scenario.sensors", this.project.scenario.sensors)
+				var that = this
+				this.svgSensors.selectAll('.sensor')
+					.data(function(d) {
+						return that.project.scenario.sensors.map(function(a) {
+							var point =  that.projection([a.display_position.point.lng,a.display_position.point.lat])
+							var vds = 0;
+							var hwy_name = "highway name"
+							var hwy_dir = "highway dir" 
+							for (var i in a.parameters.parameter) {
+								var parameter = a.parameters.parameter[i]
+								if (parameter.name == "vds") {
+									vds  = parameter.value;
+								}
+								if (parameter.name == "hwy_name") {
+									hwy_name  = parameter.value;
+								}
+								if (parameter.name == "hwy_dir") {
+									hwy_dir  = parameter.value;
+								}
+							}
+							return {
+								x: point[0],
+								y: point[1],
+								id: a.id,
+								type: a.type,
+								linkId: a.link_reference.id,
+								vds: vds,
+								hwy_name: hwy_name,
+								hwy_dir: hwy_dir
+							};
+						});
+					})
+					.enter()
+						.append('circle')
+						.attr('class', 'sensor')
+						.attr("r", 5)
+						.attr("cx", function(d) { return d.x; })
+						.attr("cy", function(d) { return d.y} )	
+						.attr("data-toggle", "tooltip")
+						.attr("title", function(d) {
+							var tooltipText = "Senspr " + d.type + " (id:" + d.id + "), vds: " + d.vds + ", place: " + d.hwy_name + ", " + d.hwy_dir;
+							return tooltipText;
+						});
+				$(".sensor").tooltip({
+					'container': 'body',
+					'placement': 'bottom'
+				});
 
-				this.map.on("click", function() { console.log("map click"); }, this);
-				this.reset();
+				// this.map.on("viewreset", this.reset, this);
+				// this.reset();
 			},
 			switchCoords: function(x) {
 				return [x[1],x[0]];
@@ -70,7 +131,7 @@ define([
 				return [point.x, point.y];
 			},
 			clearPaths: function() {
-				this.svg.selectAll("g").remove();
+				this.svgRoutes.selectAll("g").remove();
 			},
 			updatePaths: function(currentTime) {
 				// console.log("Map called to update paths");
@@ -87,7 +148,6 @@ define([
 
 					var feature = route.group.selectAll("path")
 						.data(route.links).enter();
-					// console.log("feature: ", feature);
 
 					var that = this;
 					var feature = route.group.selectAll("path")
@@ -116,7 +176,7 @@ define([
 				this.project.scenario.bottomLeft = null;
 				this.project.scenario.topRight = null;
 				route.bounds = d3.geo.bounds(collection);
-				route.group = this.svg.append("g").attr("class", "leaflet-zoom-hide route").attr("id", collection.route_id);
+				route.group = this.svgRoutes.append("g").attr("class", "leaflet-zoom-hide route").attr("id", collection.route_id);
 				var bottomLeft = this.projection(route.bounds[0]);
 				var topRight = this.projection(route.bounds[1]);
 				if (this.project.scenario.bottomLeft === null) {
@@ -204,8 +264,6 @@ define([
 					if (currentTime) {
 						var speed = Math.random()*40;
 						return that.colorScale(speed);
-						// console.log("showing performance d", d);
-						// todo 
 					}
 					return "green";
 				})
@@ -213,11 +271,10 @@ define([
 				this.reset();
 			},
 			reset: function() {
-				console.log("Reset")
 			  for (var i in this.project.scenario.routes) {
 			    var bottomLeft = this.projection(this.project.scenario.bottomLeft),
 			          topRight = this.projection(this.project.scenario.topRight);
-			    this.svg.attr("width", topRight[0] - bottomLeft[0])
+			    this.svgRoutes.attr("width", topRight[0] - bottomLeft[0])
 			          .attr("height", bottomLeft[1] - topRight[1])
 			          .style("margin-left", bottomLeft[0] + "px")
 			          .style("margin-top", topRight[1] + "px");
@@ -229,6 +286,30 @@ define([
 				    this.project.scenario.routes[i].group.selectAll("path").attr("d", this.project.scenario.routes[i].path); 
 				} 
 			  }
+			  this.resetSensorsOverlay();
+			},
+			resetSensorsOverlay: function() {
+				// var bounds = d3.geo.bounds(this.project.scenario.sensors)
+			 //    console.log("sensors bounds", bounds)
+			 //    var bottomLeft = bounds[0],
+				// 	topRight = bounds[1];
+				// if (this.svgSensors) {
+			 //    	this.svgSensors.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
+			 //    }
+			 	var that = this
+				d3.selectAll('.sensor')
+					.data(function(d) {
+						return that.project.scenario.sensors.map(function(a) {
+							var point =  that.projection([a.display_position.point.lng,a.display_position.point.lat])
+							return {
+								x: point[0],
+								y: point[1]
+							};
+						});
+					})
+					.attr("cx", function(d) { return d.x; })
+					.attr("cy", function(d) { return d.y} )	
+					
 			}
 		});	
 		return Map;

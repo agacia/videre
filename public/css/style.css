@@ -157,3 +157,9 @@ vega canvas.marks {
   border: 1px solid #ccc;
   margin: 10px;
 }
+
+.sensor {
+  stroke: cyan;
+  stroke-width: 2px;
+  fill: none;
+}

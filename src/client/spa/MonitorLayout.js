@@ -58,11 +58,9 @@ define([
 				this.mapViewItem = new Map({project: this.app.selectedProject});
 				this.map.show(this.mapViewItem);
 				this.mapViewItem.setOptions(this.contourPlotOptions)
-				// initialise controls
 				this.initialiseDateSelection();
-				// show route selection
+				this.initializeOverlaySelection();
 				this.initializeRouteSelection();
-				// show empty visualisation board
 				this.initialiseSlider(0,0,1,1);
 
 			},
@@ -156,12 +154,48 @@ define([
 						if (ele.is(':checked')){
 							ele.attr('checked', true);
 							d3.select("g#"+routeId).style("display","block");
+							console.log("show ", d3.select(".contourplot."+routeId), routeId)
+							d3.select(".contourplot."+routeId).style("display","block");
 						}
 						else {
 							ele.attr('checked', false);
 							d3.select("g#"+routeId).style("display","none");
+							d3.select(".contourplot."+routeId).style("display","none");
 						}
-					});
+					});	
+			},
+			initializeOverlaySelection: function() {
+				// populates checkboxes with route names
+				var overlays = ["routes", "sensors"]
+				var overlaySelect = d3.select(".overlay_selection span");
+				overlaySelect.selectAll("label").remove();
+				overlaySelect.selectAll("input").remove();
+				overlaySelect.selectAll("input")
+					.data(overlays)
+					.enter()
+						.append('label')
+						.attr('for',function(d,i){ return d; })
+						.text(function(d) { return d; })
+						.append("input")
+						.attr("checked", true)
+						.attr("type", "checkbox")
+						.attr("id", function(d,i) { return d; })
+						.on("click", function() {
+							var ele = $(this);
+							var overlay = ele.attr("id");
+							if (ele.is(':checked')){
+								ele.attr('checked', true);
+								d3.select("."+overlay).style("display","block");
+								console.log("show overlay", overlay)
+								// d3.select(".contourplot."+routeId).style("display","block");
+							}
+							else {
+								ele.attr('checked', false);
+								d3.select("."+overlay).style("display","none");
+								// d3.select(".contourplot."+routeId).style("display","none");
+							}
+						});
+				
 			},
 			load: function(e){
 				e.preventDefault();
@@ -231,8 +265,7 @@ define([
 			
 				// create chart-containers
 				var routes = this.app.selectedProject.scenario.routes;
-				
-				console.log("routes", routes)
+
 				var contourplotClass = this.contourPlotOptions.class;
 				var chart = d3.select(".chart").selectAll(contourplotClass)
 	    			.data(routes)
@@ -253,7 +286,6 @@ define([
 				// assign performance data for each route
 				this.readPerformanceForRoutes(routes, this.loadedDates[this.dateName].performance)
 				for (var routeId in routes) {
-					// this.initialiseContourPlot(this.contourPlotOptions);
 					this.drawContourPlot(routes[routeId], this.contourPlotOptions);
 				}
 				this.onTimeChange();
