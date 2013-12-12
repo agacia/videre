@@ -126,11 +126,11 @@ define([
 							$(that.ui.btnload.selector).button('reset');
 							$(that.ui.playbtn.selector).parent().removeClass('disabled');
 							$(that.ui.pausebtn.selector).parent().removeClass('disabled');
-							if (data.events.crossfilterArray) {
-								// that.gotEventsData(data.events.crossfilterArray);
+							if (data.events) {
+								// that.gotEventsData(data.events);
 							}
-							if (data.performance.crossfilterArray) {
-								that.gotPerformanceData(data.performance.crossfilterArray);
+							if (data.performance) {
+								that.gotPerformanceData(data.performance);
 							}
 						}
 						else {

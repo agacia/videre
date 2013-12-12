@@ -75,7 +75,7 @@ var exports = module.exports = (function(){
 									var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
 									// result.jsonArray = []
 									// var countReadFiles = 0;
-									result.crossfilterArray = []
+									result = []
 									for (var i in dataFilenames) {
 										var requestedDatetime = obj.parseFilename(dataFilenames[i], requestedDate.date);
 										var filepath = pathjs.join(path, dataFilenames[i]);
@@ -91,7 +91,7 @@ var exports = module.exports = (function(){
 												record.flow = data[j][3] // todo which column is density and flow?
 												record.date = requestedDatetime.datetime;
 												record.timestamp = requestedDatetime.timestamp;
-												result.crossfilterArray.push(record);
+												result.push(record);
 											}
 											// result.jsonArray.push(
 											// {
