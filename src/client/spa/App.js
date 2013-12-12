@@ -62,6 +62,7 @@ define([
 				error: function (data){
 					data = JSON.parse(data.responseText);
 					cbError(data.error);
+					app.selectedProjectname = null
 				},
 				success: function(data){
 					app.selectedProjectname = projectname;
@@ -82,6 +83,7 @@ define([
 					cbError(data.error);
 				},
 				success: function(data){
+					console.log("/readScenarioData response", data)
 					cbSuccess(data);
 				}
 			});

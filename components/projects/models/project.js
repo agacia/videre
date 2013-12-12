@@ -12,7 +12,7 @@
 			cb(errors, obj);
 		},
 		normalize: function(obj){
-			console.log("in normalize");
+			// console.log("in normalize");
 			return normalize(obj).copy("projectname").toLower("projectname").toSlang("projectname", "id", "scenario").end();
 		},
 		validateUpdate: function(obj, cb){

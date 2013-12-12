@@ -26,12 +26,15 @@ define([
 				timebrush: ".timebrush"
 			},
 			events: {
-				"submit": "load"
+				"submit": "load",
+				"click .btn.predict": "goPredict",
+				"click .btn.addEvent": "showAddEvent",
+				"click .window .btn.close": "hideAddEvent"
 				// "change .select.availabledate": "onChangeAvailableDate"
 			},
 			initialize: function(){
 				this.app = this.options.app; 
-				console.log("initialize this.selectedProject ", this.app.selectedProject);
+				// console.log("initialize this.selectedProject ", this.app.selectedProject);
 				this.timerDelay = 600;
 				var now = new Date();
 				this.simulationDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -52,7 +55,9 @@ define([
 						"bottom": 30,
 						"right": 0
 					},
-					"colorScale": d3.scale.linear().domain([0, 32]).range(['red', 'green'])
+					"speedScale": d3.scale.linear().domain([0, 32]).range(['red', 'green']),
+					"flowScale": d3.scale.linear().domain([0, 0.1]).range([1, 20]),
+					"densityScale": d3.scale.linear().domain([0, 1]).range([0, 1])
 				}
 				// show map with routes (without performance )
 				this.mapViewItem = new Map({project: this.app.selectedProject});
@@ -61,8 +66,15 @@ define([
 				this.initialiseDateSelection();
 				this.initializeOverlaySelection();
 				this.initializeRouteSelection();
+				this.initializeRouteSelectionForCharts();
 				this.initialiseSlider(0,0,1,1);
 
+			},
+			showAddEvent: function() {
+				$(".newEvent.window").show();
+			},
+			hideAddEvent: function() {
+				$(".newEvent.window").hide();
 			},
 			initialiseDateSelection: function() {
 				var that = this;
@@ -135,7 +147,7 @@ define([
 			},
 			initializeRouteSelection: function() {
 				// populates checkboxes with route names
-				var routeSelect = d3.select(".route_selection span");
+				var routeSelect = d3.select(".route_routesn span");
 				// console.log("routeselect", routeSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
 				routeSelect.selectAll("label").remove();
 				routeSelect.selectAll("input").remove();
@@ -154,12 +166,41 @@ define([
 						if (ele.is(':checked')){
 							ele.attr('checked', true);
 							d3.select("g#"+routeId).style("display","block");
-							console.log("show ", d3.select(".contourplot."+routeId), routeId)
-							d3.select(".contourplot."+routeId).style("display","block");
+							// d3.select(".contourplot."+routeId).style("display","block");
 						}
 						else {
 							ele.attr('checked', false);
 							d3.select("g#"+routeId).style("display","none");
+							// d3.select(".contourplot."+routeId).style("display","none");
+						}
+					});	
+			},
+			initializeRouteSelectionForCharts: function() {
+				// populates checkboxes with route names
+				var routeSelect = d3.select(".route_selection_charts span");
+				// console.log("routeselect", routeSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
+				routeSelect.selectAll("label").remove();
+				routeSelect.selectAll("input").remove();
+				routeSelect.selectAll("input")
+					.data(this.app.selectedProject.scenario.routes).enter()
+					.append('label')
+					.attr('for',function(d,i){ return d.id; })
+					.text(function(d) { return d.name; })
+					.append("input")
+					.attr("checked", true)
+					.attr("type", "checkbox")
+					.attr("id", function(d,i) { return d.id; })
+					.on("click", function() {
+						var ele = $(this);
+						var routeId = ele.attr("id");
+						if (ele.is(':checked')){
+							ele.attr('checked', true);
+							// d3.select("g#"+routeId).style("display","block");
+							d3.select(".contourplot."+routeId).style("display","block");
+						}
+						else {
+							ele.attr('checked', false);
+							// d3.select("g#"+routeId).style("display","none");
 							d3.select(".contourplot."+routeId).style("display","none");
 						}
 					});	
@@ -186,7 +227,7 @@ define([
 							if (ele.is(':checked')){
 								ele.attr('checked', true);
 								d3.select("."+overlay).style("display","block");
-								console.log("show overlay", overlay)
+								// console.log("show overlay", overlay)
 								// d3.select(".contourplot."+routeId).style("display","block");
 							}
 							else {
@@ -196,6 +237,10 @@ define([
 							}
 						});
 				
+			},
+			goPredict: function(e) {
+				e.preventDefault
+				this.app.showPrediction();
 			},
 			load: function(e){
 				e.preventDefault();
@@ -218,13 +263,25 @@ define([
 							$(that.ui.btnload.selector).button('reset');
 							$(that.ui.playbtn.selector).parent().removeClass('disabled');
 							$(that.ui.pausebtn.selector).parent().removeClass('disabled');
-							if (data.events) {
-								that.gotEventsData(data.events);
+							// if (data.events) {
+							// 	that.gotEventsData(data.events.jsonArray);
+							// }
+							// if (data.performance) {
+							// 	that.gotPerformanceData(data.performance.jsonArray);
+							// }
+							if (data.performance.crossfilterArray) {
+								var performance = crossfilter(data.performance.crossfilterArray);
+								// console.log("performance", performance);
+								var performanceByDate = performance.dimension(function(d) { return d.timestamp; });
+								// console.log("performanceByDate", performanceByDate)
+								// var nonZeroPer = performanceByDate.filter(function(d) { return d > 0; });
+								// console.log("nonZeroPerformance", nonZeroPer)
+								var selectedPerformance = performanceByDate.top(Infinity);
+								console.log("selectedPerformance", selectedPerformance.length);
+								var group = performanceByDate.group();
+								console.log("group", group.top(Infinity))
 							}
-							if (data.performance) {
-								that.gotPerformanceData(data.performance);
-							}
-							console.log("loaded this.loadedDates[dateName]", that.dateName, that.loadedDates[that.dateName]);
+							// console.log("loaded this.loadedDates[dateName]", that.dateName, that.loadedDates[that.dateName]);
 							
 						}
 						else {
@@ -234,10 +291,16 @@ define([
 					});
 			},
 			sortByTimestamp: function(data) {
+				
+				// time += this.simulationStep * 1000; // simulationStep in seconds
+				var dateValue = this.simulationDate.valueOf();
+				var milisec = 1000;
+				
 				for (var i in data) {
 					var timestamp = data[i].fileName.split('.')[0];
 					timestamp = timestamp.split('_')[1];
 					data[i].timestamp = +timestamp;
+					data[i].date = new Date(dateValue + timestamp * milisec); 
 				}
 				// sort 
 				data = _.sortBy(data, function(obj){ return obj.timestamp });
@@ -280,15 +343,16 @@ define([
 				chart.append('div')
 					.attr('class', 'timebrush')
 					.append("svg:svg")
-    				.attr('width', this.contourPlotOptions.width - this.contourPlotOptions.margin.left)
-    				.attr('height', this.contourPlotOptions.height - this.contourPlotOptions.margin.bottom)
-
+    				
 				// assign performance data for each route
 				this.readPerformanceForRoutes(routes, this.loadedDates[this.dateName].performance)
 				for (var routeId in routes) {
 					this.drawContourPlot(routes[routeId], this.contourPlotOptions);
 				}
 				this.onTimeChange();
+
+				
+				
 			},
 			gotEventsData: function(data) {
 				if (!(this.dateName in this.loadedDates)) {
@@ -345,6 +409,7 @@ define([
 						}
 						linkPerformance[linkId].push({
 							"timestamp": timestamp, 
+							"date": timeData['date'],
 							"speed": linkData[1], 
 							"density" : linkData[2], 
 							"flow" : linkData[3] // todo which column is density and flow?
@@ -445,7 +510,7 @@ define([
 	    		this.udpateEventFeed()
     		},
     		drawContourPlot: function(route, options) { // actually draws the contour plot with the loaded data
-    			console.log("drawing contourplot ", route, options)
+    			// console.log("drawing contourplot ", route, options)
     			var width =  options.width;
     			var height =  options.height;
     			var margin = options.margin;
@@ -464,9 +529,16 @@ define([
 					.range([0,height - margin.bottom])
 					.domain([0,data[data.length-1].properties.offset]);
 						
+				var hourTimeFormat = function(d) { 
+					// console.log(d , d/3600)
+					return d/3600;
+					return d.getHours(); 
+				};
+
 				var xAxis = d3.svg.axis()
 					.scale(x)
-					.orient('bottom');
+					.orient('bottom')
+					.tickFormat(hourTimeFormat);
 
 				var yAxis = d3.svg.axis()
 					.scale(yReverse)
@@ -519,11 +591,11 @@ define([
 							return y(d.length)
 						})
 						.style("fill", function(d) { 
-							return options.colorScale(d.speed);
+							return options.speedScale(d.speed);
 						})
 						.style("stroke", "none")
 						.on ("mouseover", function(d) {
-							console.log("todo show tooltip about data", d)
+							// console.log("todo show tooltip about data", d)
 						});;
 
 				var gXAxis = chartarea
@@ -532,14 +604,17 @@ define([
 					.call(xAxis);
 				var gYAxis = chartarea
 					.append("g")
+
 					.attr('transform',  "translate(" + margin.left + "," + 0 + ")")
 					.call(yAxis);
 
     			var timebrush =  contourplot.select(this.ui.timebrush.selector + " svg")
-    				// .attr("transform", "translate(" + margin.left + "," + 0 + ")");
+    				.attr("width", width)
+    				.attr('height', height - margin.bottom)
+
     			var gTimebrush = timebrush
 					.append("g")
-					// .attr('width', options.width - options.margin.left)
+					.attr("width", width - margin.left - margin.right)
     				.attr("transform", "translate(" + margin.left + "," + 0 + ")");
 				
 				gTimebrush.append('rect')

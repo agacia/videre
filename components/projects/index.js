@@ -31,7 +31,7 @@
 					});
 				},
 				readData: function(project, cb){
-					console.log("in components/projects/index readData, project: ", project);
+					// console.log("in components/projects/index readData, project: ", project);
 					var projectname = project.projectname;
 					var scenarioname = project.scenarioname;
 					var date = project.date;
@@ -52,7 +52,7 @@
 						var project;
 						if(err){
 							cb(err);
-						}else{
+						} else {
 							project = projectModel.normalize(proj);
 							if(project.id !== proj.oldId){
 								if(db.kv(project.id)){

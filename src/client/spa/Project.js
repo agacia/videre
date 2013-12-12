@@ -3,10 +3,7 @@ define([
 	],
 	function(templates){
 		var Project = Backbone.Marionette.ItemView.extend({
-			initialize: function(){
-				this.app = this.options.app;
-			},
-			template: function(){
+			template: function() {
 				return window.JST["project.html"];
 			},
 			events:{
@@ -20,9 +17,16 @@ define([
 				message: "div.message",
 				btnload: ".btn.load"
 			},
+			initialize: function() {
+				this.app = this.options.app; 
+			},
 			onShow: function(){
 				this.populateProjects(this.app.projects);
 				this.ui.projectname.focus();
+				// console.log("this.app.selectedProjectname", this.app.selectedProjectname)
+				if (this.app.selectedProjectname) {
+					this.ui.message.html("Project and scenario " + this.app.selectedProjectname + "loaded! Go to realtime / monitor or prediction view");	
+				}
 			},
 			populateProjects: function(projects) {
 				d3.select(this.ui.projectname.selector).selectAll("option").remove();

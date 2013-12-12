@@ -36,26 +36,77 @@ var exports = module.exports = (function(){
 								}
 							});
 						},
+						parseFolder: function(path) {
+							var dateFolder = path.match(/\d{8}/);
+							var result = {}
+							if (dateFolder) {
+								result.datestamp = dateFolder[0];
+								var year = result.datestamp.slice(0,4);
+								var month = +result.datestamp.slice(4,6);
+								var day = result.datestamp.slice(6,8);
+								result.date = new Date(year, (month-1), day, 0, 0, 0, 0);
+							}
+							return result; 
+						},
+						parseFilename: function(filename, dayDate) {
+							var milisec = 1000;
+							var result = {}
+							if (filename) {
+								var dateValue = dayDate.valueOf();
+								var filenameBase = filename.split('.')[0];
+								result.runId = filenameBase.split('_')[0];
+								result.timestamp = filenameBase.split('_')[1];
+								result.datetime = new Date(dateValue + result.timestamp * milisec);
+							}
+							return result; 
+						},
 						readTsvDataFolder: function(path, cb) {
 							try {
-								var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
-								var jsonArray = []
-								for (var i in dataFilenames) {
-									var filepath = pathjs.join(path, dataFilenames[i]);
-									var stats = fs.lstatSync(filepath);
-									if (stats.isFile()) {
-										var dataTvs = fs.readFileSync(filepath);
-										var data = d3.tsv.parseRows(dataTvs.toString());
-										jsonArray.push(
-										{
-											"file" : filepath,
-											"fileName": dataFilenames[i],
-											"data" : data
-										});
-										if (jsonArray.length == dataFilenames.length) {
-											cb(undefined, jsonArray);
+								result = {};
+								var requestedDate = obj.parseFolder(path);
+								var pathJSON = pathjs.join(path, requestedDate.datestamp + ".json");
+								// load precomputed json file if exists
+								if (fs.existsSync(pathJSON)) {
+									result = fs.readFileSync(pathJSON, 'utf8');
+									result = JSON.parse(result);
+									cb(undefined, result);
+								}
+								else { // read all tsv files into json
+									var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
+									// result.jsonArray = []
+									// var countReadFiles = 0;
+									result.crossfilterArray = []
+									for (var i in dataFilenames) {
+										var requestedDatetime = obj.parseFilename(dataFilenames[i], requestedDate.date);
+										var filepath = pathjs.join(path, dataFilenames[i]);
+										var stats = fs.lstatSync(filepath);
+										if (stats.isFile()) {
+											var dataTvs = fs.readFileSync(filepath);
+											var data = d3.tsv.parseRows(dataTvs.toString());
+											for (var j in data) {
+												record = {}
+												record.id = data[j][0];
+												record.speed = data[j][1], 
+												record.density = data[j][2], 
+												record.flow = data[j][3] // todo which column is density and flow?
+												record.date = requestedDatetime.datetime;
+												record.timestamp = requestedDatetime.timestamp;
+												result.crossfilterArray.push(record);
+											}
+											// result.jsonArray.push(
+											// {
+											// 	"file" : filepath,
+											// 	"fileName": dataFilenames[i],
+											// 	"data" : data
+											// });
+											// if (i == dataFilenames.length) {
+											// 	fs.writeFileSync(pathJSON, JSON.stringify(result))
+											// 	cb(undefined, result);
+											// }
 										}
 									}
+									fs.writeFileSync(pathJSON, JSON.stringify(result))
+									cb(undefined, result);	
 								}
 							} catch(e) {
 								cb("Error: " + e);
@@ -77,28 +128,22 @@ var exports = module.exports = (function(){
 											// var streamreader = fs.createReadStream()
 											// var inputFile = path + "/" + dataFilenames[i];
 											// var inStream = fs.createReadStream(inputFile);
-											// console.log("in ", inStream)
 											// fs.createWriteStream(path+'/sample.out')
 											// csvparser()
 											// 	.from.stream(fs.createReadStream(inputFile), { delimiter: '\t' })
 											// 	.to.array(function(data){
-											// 		console.log(data)
 											// 	})
 											// 	.transform(function(row){
-											// 		// console.log("row", row);
 											// 		row.unshift(row.pop());
 											// 		return row;
 											// 	})
 											// 	.on('record', function(row,index){
-											// 		// console.log('#'+index+' '+JSON.stringify(row));
 											// 	})
 											// 	.on('close', function(count){
 											// 		// when writing to a file, use the 'close' event
 											// 		// the 'end' event may fire before the file has been written
-											// 		console.log('Number of lines: '+count);
 											// 	})
 											// 	.on('error', function(error){
-											// 		console.log(error.message);
 											// 	});
 										// } catch(e) {
 										// 	cb("Error: Bad file: " + e);
@@ -242,18 +287,18 @@ var exports = module.exports = (function(){
 									linkIds: [],
 									performance: []
 								};
-								var HOVroute =    {
-									"id": "route2",
-									"name": "HOV",
-									linkIds: [],
-									performance: []
-								};
-								var rampsRoute =    {
-									"id": "route3",
-									"name": "ramps",
-									linkIds: [],
-									performance: []
-								}
+								// var HOVroute =    {
+								// 	"id": "route2",
+								// 	"name": "HOV",
+								// 	linkIds: [],
+								// 	performance: []
+								// };
+								// var rampsRoute =    {
+								// 	"id": "route3",
+								// 	"name": "ramps",
+								// 	linkIds: [],
+								// 	performance: []
+								// };
 								for (var i in scenario.networks) {
 									var network = scenario.networks[i];
 									for (var j in network.links.features) {
@@ -261,15 +306,16 @@ var exports = module.exports = (function(){
 										if (link.properties.type == "freeway") {
 											route.linkIds.push(link.properties.id);
 										}
-										if (link.properties.type == "HOV") {
-											HOVroute.linkIds.push(link.properties.id);
-										}
-										if (link.properties.type == "onramp" || link.properties.type == "offramp") {
-											rampsRoute.linkIds.push(link.properties.id);
-										}
+										// if (link.properties.type == "HOV") {
+										// 	HOVroute.linkIds.push(link.properties.id);
+										// }
+										// if (link.properties.type == "onramp" || link.properties.type == "offramp") {
+										// 	rampsRoute.linkIds.push(link.properties.id);
+										// }
 									}
 								}
-								routes = [route, HOVroute, rampsRoute];
+								// routes = [route, HOVroute, rampsRoute];
+								routes = [route];
 							}
 							// calculate offset of subsequent links 
 							for (var i in routes) {
@@ -282,8 +328,6 @@ var exports = module.exports = (function(){
 									offset += link.properties.length;
 									routes[i].links.push(link);
 								}
-								// console.log("routeid", routes[i].id)
-								// console.log("links ", routes[i].links.length)
 							}
 							return routes;
 						},

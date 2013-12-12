@@ -27,7 +27,7 @@ define([
 				//routeselect: ".route_select span"
 			},
 			setOptions: function(options) {
-				this.colorScale = options.colorScale;
+				this.options = options
 			},
 			initializeMap: function() {
 				this.map = new L.Map(this.mapId);
@@ -35,39 +35,35 @@ define([
 				this.map.addLayer(layer);
 				this.map.setView(new L.LatLng(this.project.scenario.y_center, this.project.scenario.x_center), this.project.scenario.zoom); 
 				// ad d3 svg overlay
-				this.initializePathsOverlay();
-				this.initializeSensorsOverlay();
+				this.initializeMapOverlay();
+				// this.initializeSensorsOverlay();
 			},
-			initializePathsOverlay: function() {
+			initializeMapOverlay: function() {
 				var overlayPane = d3.select(this.map.getPanes().overlayPane);
-				this.svgRoutes = overlayPane.append("svg");
-				this.svgRoutes
-					.attr('class','routes')
+				this.svgOverlay = overlayPane.append("svg");
+				this.svgOverlay
 					.attr("width", $("#"+this.mapId).width())
 					.attr("height", $("#"+this.mapId).height())
 					.style("margin-left", "0px")
 					.style("margin-top", "0px");
+				var routeGroup = this.svgOverlay.append('g')
+					.attr('class','routes')
 				 // show routes on the overlay
 				for (var i in this.project.scenario.routes) {
-					this.initializePaths(this.project.scenario.routes[i], null);
+					this.initializePaths(routeGroup, this.project.scenario.routes[i], null);
 				}
+				this.project.scenario.sensors.group = this.svgOverlay.append('g').attr('class', 'sensors');
+				this.initializeSensorsGroup(this.project.scenario.sensors.group);
 				this.map.on("viewreset", this.reset, this);
 				// this.reset();
 			},
-			initializeSensorsOverlay: function() {
-				var overlayPane = d3.select(this.map.getPanes().overlayPane);
-				this.svgSensors = overlayPane.append("svg");
-				this.svgSensors
-					.attr('class', 'sensors')
-					.attr("width", $("#"+this.mapId).width())
-					.attr("height", $("#"+this.mapId).height())
-					.style("margin-left", "0px")
-					.style("margin-top", "0px")
-					
-				// show routes on the overlay
-				console.log("this.project.scenario.sensors", this.project.scenario.sensors)
-				var that = this
-				this.svgSensors.selectAll('.sensor')
+			initializeSensorsGroup: function(group) {
+				group.attr("class", "sensors leaflet-zoom-hide route")
+				var bottomLeft = this.projection([this.project.scenario.bottomLeft[0],this.project.scenario.bottomLeft[0]]);
+				var topRight = this.projection([this.project.scenario.topRight[0],this.project.scenario.topRight[1]]);	
+				group.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");			
+				var that = this;
+				group.selectAll('.sensor')
 					.data(function(d) {
 						return that.project.scenario.sensors.map(function(a) {
 							var point =  that.projection([a.display_position.point.lng,a.display_position.point.lat])
@@ -106,14 +102,17 @@ define([
 						.attr("cy", function(d) { return d.y} )	
 						.attr("data-toggle", "tooltip")
 						.attr("title", function(d) {
-							var tooltipText = "Senspr " + d.type + " (id:" + d.id + "), vds: " + d.vds + ", place: " + d.hwy_name + ", " + d.hwy_dir;
+							var tooltipText = "Sensor " + d.type + " (id:" + d.id + "), vds: " + d.vds + ", place: " + d.hwy_name + ", " + d.hwy_dir;
 							return tooltipText;
-						});
+						})
+						// .on("mouseover", function(d) {
+						// 	// console.log("hover sensor ", d)
+						// });
 				$(".sensor").tooltip({
 					'container': 'body',
 					'placement': 'bottom'
 				});
-
+					
 				// this.map.on("viewreset", this.reset, this);
 				// this.reset();
 			},
@@ -131,24 +130,18 @@ define([
 				return [point.x, point.y];
 			},
 			clearPaths: function() {
-				this.svgRoutes.selectAll("g").remove();
+				this.svgOverlay.selectAll("g").remove();
 			},
 			updatePaths: function(currentTime) {
-				// console.log("Map called to update paths");
-				// this.clearPaths();
 				for (var i in this.project.scenario.routes) {
-				// 	this.initializePaths(this.project.scenario.routes[i], currentTime, null);
 					var route = this.project.scenario.routes[i];
-					// console.log("update route", route)
 					var collection = {
 						"type":"FeatureCollection", 
 						"features": route.links, 
 						"route_id": route.id
 					};
-
 					var feature = route.group.selectAll("path")
 						.data(route.links).enter();
-
 					var that = this;
 					var feature = route.group.selectAll("path")
 						.data(route.links)
@@ -156,17 +149,37 @@ define([
 							if (currentTime) {
 								for (var i in d.performance) {
 									if (d.performance[i]['timestamp'] == currentTime) {
-										return that.colorScale(d.performance[i]['speed']);
+										return that.options.speedScale(d.performance[i]['speed']);
 									}
 								}
 							}
 							return "green";
+						})
+						.style('stroke-width', function(d) {
+							if (currentTime) {
+								for (var i in d.performance) {
+									if (d.performance[i]['timestamp'] == currentTime) {
+										return that.options.flowScale(d.performance[i]['flow']);
+									}
+								}
+							}
+							return 10;
+						})
+						.style('opacity', function(d) {
+							if (currentTime) {
+								if (d.performance[i]['timestamp'] == currentTime) {
+									// console.log("density", d.performance[i]['density'], that.options.densityScale(d.performance[i]['density']))
+									return that.options.densityScale(d.performance[i]['density'])*1000;
+								}	
+							}
+							return 1;
 						});
+					this.setMouseActions(collection, feature, currentTime);
 				}
 
 				this.reset();
 			},
-			initializePaths: function(route, currentTime, onclick) {
+			initializePaths: function(group, route, currentTime, onclick) {
 				var collection = {
 					"type":"FeatureCollection", 
 					"features": route.links, 
@@ -176,7 +189,7 @@ define([
 				this.project.scenario.bottomLeft = null;
 				this.project.scenario.topRight = null;
 				route.bounds = d3.geo.bounds(collection);
-				route.group = this.svgRoutes.append("g").attr("class", "leaflet-zoom-hide route").attr("id", collection.route_id);
+				route.group = group.append("g").attr("class", "leaflet-zoom-hide route").attr("id", collection.route_id);
 				var bottomLeft = this.projection(route.bounds[0]);
 				var topRight = this.projection(route.bounds[1]);
 				if (this.project.scenario.bottomLeft === null) {
@@ -204,6 +217,32 @@ define([
 					.enter().append("path");
 				feature.attr("d", route.path);
 				feature.attr("route_id", collection.route_id);
+				var that = this;
+				feature
+					.style('stroke', function(d) {
+						if (currentTime) {
+							var speed = Math.random()*40;
+							return that.options.speedScale(speed);
+						}
+						return "green";
+					})
+					.style('stroke-width', function(d) {
+						if (currentTime) {
+							return that.options.flowScale(d.performance.data.flow);
+						}
+						return 10;
+					})
+					.style('opacity', function(d) {
+						if (currentTime) {
+							return that.options.densityScale(d.performance.data.density)+1000;
+						}
+						return 1;
+					})
+				//this.map.on("viewreset", this.reset, this);
+				this.setMouseActions(collection, feature, currentTime);
+				this.reset();
+			},
+			setMouseActions: function(collection, feature, currentTime) {
 				// events
 				// mousedown: Triggered by an element when a mouse button is pressed down over it
 				// mouseup: Triggered by an element when a mouse button is released over it
@@ -215,101 +254,117 @@ define([
 				// dblclick: Triggered by two clicks within a short time over an element
 				feature.on("mouseover", function(d) {
 					d3.select("g#"+collection.route_id).selectAll("path").classed("hover", true)
-					// console.log("hover " + collection.route_id)
+					// console.log("hover path ", collection.route_id, d)
 				});
-				feature.on("mouseout", function(d) {
-					d3.select("g#"+collection.route_id).selectAll("path").classed("hover", false)
-				});
+				// feature.on("mouseout", function(d) {
+				// 	d3.select("g#"+collection.route_id).selectAll("path").classed("hover", false)
+				// });
 				feature.on("click", function(d) {
 					//onclick(d, collection.route_id);]
 
 				});
 				// custom tooltips
-				//var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
-				// feature.on("mouseover", function(d) {    
-				//           div.transition()        
-				//               .duration(200)      
-				//               .style("opacity", .9);      
-				//           div .html("over link " + "<br/>"  + d.properties.id)  
-				//               .style("left", (d3.event.pageX) + "px")     
-				//               .style("top", (d3.event.pageY - 28) + "px");  
-				//       })                  
-				//       .on("mouseout", function(d) {       
-				//           div.transition()        
-				//               .duration(500)      
-				//               .style("opacity", 0);   
-				//       });
+				var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
+				var divInfo = d3.select("body").append("div")
+					.attr("class", "linkinfo window").style("opacity", 1)
+				divInfo.append("p").html("Link info")
+				divInfo.append("div").attr("class", "content");
+				var currentLink;
+				feature
+					.on("mouseover", function(d) {    
+					    var tooltipText = ""
+					    if (d.performance) {
+							if (currentTime) {
+								for (var i in d.performance) {
+									if (d.performance[i]['timestamp'] == currentTime) {
+										currentLink = d.performance[i];
+										// console.log("d.performance[i]", d.performance[i])
+										tooltipText += "<p>speed: " + d.performance[i]['speed'] + "</p>";
+										tooltipText += "<p>flow: " + d.performance[i]['flow'] + "</p>";
+										tooltipText += "<p>density: " + d.performance[i]['density'] + "</p>";
+									}
+								}
+							}
+						}
+						div.transition()        
+							.duration(100)      
+							.style("opacity", .9);      
+						div.html("<p>over link " + d.properties.id + "</p><p>" + tooltipText + "</p>")
+							.style("left", (d3.event.pageX) + "px")     
+							.style("top", (d3.event.pageY - 28) + "px");  
+					})                  
+					.on("mouseout", function(d) {       
+						div.transition()        
+							.duration(100)      
+							.style("opacity", 0);   
+					})
+					.on("click", function(d) {       
+						divInfo.transition()        
+							.duration(100)      
+							.style("opacity", 1);  
+						divInfo.select(".content").html("<p>"+currentLink['speed']+"</p>") 
+					});
 				// twitter bootsrap tooltip
-				feature.attr("data-toggle", "tooltip");
-				feature.attr("title", function(d) {
-					var tooltipText = "Route " + collection.route_id;
-					tooltipText += "\nlink: " +  d.properties.id + ", type: " + d.properties.type + ", offset: " + d.properties.offset + ", length: " + d.properties.length;
-					if (d.performance) {
-						tooltipText += "\nspeed: " + d.performance.data.speed;
-						tooltipText += "\nflow: " + d.performance.data.flow;
-						tooltipText += "\ndensity: " + d.performance.data.density;
-					}
-					return tooltipText;
-				});
-				$("path").tooltip({
-					'container': 'body',
-					'placement': 'bottom'
-				});
-				feature.style('stroke-width', function(d) {
-					return Math.random()*10;
-				});
-				
-				var that = this;
-				feature.style('stroke', function(d) {
-					if (currentTime) {
-						var speed = Math.random()*40;
-						return that.colorScale(speed);
-					}
-					return "green";
-				})
-				//this.map.on("viewreset", this.reset, this);
-				this.reset();
+				// feature.attr("data-toggle", "tooltip");
+				// feature.attr("title", function(d) {
+				// 	var tooltipText = "Route " + collection.route_id;
+				// 	tooltipText += "\nlink: " +  d.properties.id + ", type: " + d.properties.type + ", offset: " + d.properties.offset + ", length: " + d.properties.length;
+				// 	// console.log("d", d)
+				// 	if (d.performance) {
+				// 		if (currentTime) {
+				// 			for (var i in d.performance) {
+				// 				if (d.performance[i]['timestamp'] == currentTime) {
+				// 					console.log("d.performance[i]", d.performance[i])
+				// 					tooltipText += " speed: " + d.performance[i]['speed'];
+				// 					tooltipText += " flow: " + d.performance[i]['flow'];
+				// 					tooltipText += " density: " + d.performance[i]['density'];
+				// 				}
+				// 			}
+				// 		}
+				// 	}
+				// 	return tooltipText;
+				// });
+				// $("path").tooltip({
+				// 	'container': 'body',
+				// 	'placement': 'bottom'
+				// });
 			},
 			reset: function() {
-			  for (var i in this.project.scenario.routes) {
-			    var bottomLeft = this.projection(this.project.scenario.bottomLeft),
-			          topRight = this.projection(this.project.scenario.topRight);
-			    this.svgRoutes.attr("width", topRight[0] - bottomLeft[0])
-			          .attr("height", bottomLeft[1] - topRight[1])
-			          .style("margin-left", bottomLeft[0] + "px")
-			          .style("margin-top", topRight[1] + "px");
-			    if (this.project.scenario.routes[i].bounds) {
-				    var bounds = this.project.scenario.routes[i].bounds;
-				    var bottomLeft = this.projection(bounds[0]),
-				          topRight = this.projection(bounds[1]);
-				    this.project.scenario.routes[i].group.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
-				    this.project.scenario.routes[i].group.selectAll("path").attr("d", this.project.scenario.routes[i].path); 
+				var bottomLeft = this.projection(this.project.scenario.bottomLeft),
+				topRight = this.projection(this.project.scenario.topRight);
+				this.svgOverlay.attr("width", topRight[0] - bottomLeft[0])
+					.attr("height", bottomLeft[1] - topRight[1])
+					.style("margin-left", bottomLeft[0] + "px")
+					.style("margin-top", topRight[1] + "px");
+				// translate route groups
+				for (var i in this.project.scenario.routes) {		    
+				    if (this.project.scenario.routes[i].bounds) {
+					    var bounds = this.project.scenario.routes[i].bounds;
+					    var bottomLeft = this.projection(bounds[0]),
+				         topRight = this.projection(bounds[1]);
+					    this.project.scenario.routes[i].group.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
+					    this.project.scenario.routes[i].group.selectAll("path").attr("d", this.project.scenario.routes[i].path); 
+					}
+
 				} 
-			  }
-			  this.resetSensorsOverlay();
-			},
-			resetSensorsOverlay: function() {
-				// var bounds = d3.geo.bounds(this.project.scenario.sensors)
-			 //    console.log("sensors bounds", bounds)
-			 //    var bottomLeft = bounds[0],
-				// 	topRight = bounds[1];
-				// if (this.svgSensors) {
-			 //    	this.svgSensors.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
-			 //    }
-			 	var that = this
-				d3.selectAll('.sensor')
-					.data(function(d) {
-						return that.project.scenario.sensors.map(function(a) {
-							var point =  that.projection([a.display_position.point.lng,a.display_position.point.lat])
-							return {
-								x: point[0],
-								y: point[1]
-							};
-						});
-					})
-					.attr("cx", function(d) { return d.x; })
-					.attr("cy", function(d) { return d.y} )	
-					
+				// translate sensors group
+				var that = this;
+				if (this.project.scenario.sensors.group) {
+					this.project.scenario.sensors.group.attr("transform", "translate(" + -bottomLeft[0] + "," + -topRight[1] + ")");
+					this.project.scenario.sensors.group.selectAll('.sensor')
+						.data(function(d) {
+							return that.project.scenario.sensors.map(function(a) {
+								var point =  that.projection([a.display_position.point.lng,a.display_position.point.lat])
+								return {
+									x: point[0],
+									y: point[1]
+								};
+							});
+						})
+						.attr("cx", function(d) { return d.x; })
+						.attr("cy", function(d) { return d.y} )	
+				}
+				
 			}
 		});	
 		return Map;

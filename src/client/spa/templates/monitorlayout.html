@@ -36,18 +36,65 @@
 			<div class="row">
 				<p>Current events: <span class="event-timestamp"></span></p>
 				<div class="events-feed">		
+				</div>
+				<div class="control-group">
+					<div class="controls">
+						<button type="button" name="addNewEventButton" class="btn addEvent">Add new event</button>
+					</div>
+				</div>
+				<div class="route_selection_charts">
+					<h5>Routes:</h5>
+					<span></span>
+				</div>
+				<div class="chart">
+					<p>Please load data to show contourplots</p>
+				</div>
+				<div class="control-group">
+					<div class="controls">
+						<button type="button" name="buttonPredict" class="btn predict">Go to prediction!</button>
+					</div>
+				</div>
 			</div>
-			<div class="chart">
-				<p>Please load data to show contourplots</p>
-			</div>
-			
 		</div>
 	</div>
-
+	
 </div>
 
-
-	
-	
-	
+<div class="newEvent window">
+	<div class"dragbar"></div>
+	<button type="button" class="btn close btn-primary">OK</button>
+	<div class="content">
+		<h2>Add new event</h2>
+		<div class="control-group">
+			<label class="control-label" for="eventName">Name:</label>
+			<div class="controls">
+				<input type="text" name="eventName" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="eventDescription">Description:</label>
+			<div class="controls">
+				<input type="text" name="eventDescription" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="eventTimeStart">Time start:</label>
+			<div class="controls">
+				<input type="text" name="eventTimeStart" />
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="eventTimeEnd">Time end:</label>
+			<div class="controls">
+				<input type="text" name="eventTimeEnd" />
+			</div>
+		</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="buttonSaveEvent"></label>
+			<div class="controls">
+				<button type="button" name="buttonSaveEvent" class="btn save">Save</button>
+			</div>
+		</div>
+	</div>
 </div>
