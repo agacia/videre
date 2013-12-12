@@ -23,7 +23,6 @@ define([
 			onShow: function(){
 				this.populateProjects(this.app.projects);
 				this.ui.projectname.focus();
-				// console.log("this.app.selectedProjectname", this.app.selectedProjectname)
 				if (this.app.selectedProjectname) {
 					this.ui.message.html("Project and scenario " + this.app.selectedProjectname + "loaded! Go to realtime / monitor or prediction view");	
 				}
@@ -77,6 +76,7 @@ define([
 					function(){
 						that.ui.message.html("Project and scenario loaded! Go to realtime / monitor or prediction view");	
 						$(that.ui.btnload.selector).button('reset');
+						that.app.showMonitor({"mode":"historical"});
 					});
 			}
 		});

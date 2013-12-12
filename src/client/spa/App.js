@@ -18,8 +18,9 @@ define([
 			this.layout.menu.show(new Menu({
 				app: this
 			}));
-			this.layout.content.show(new Board());
-			this.loadProjects(null, function(){});
+			// this.layout.content.show(new Project());
+			// this.loadProjects(null, function(){});
+			this.showProjectForm();
 		},
 		loadProjects: function(cbError, cbSuccess) {
 			var app = this;
@@ -50,7 +51,7 @@ define([
 				var app = this;
 				this.loadProjects(null, function() {
 					// app.layout.content.show(app.projectView);
-					this.layout.content.show(new Project({app: app}));
+					app.layout.content.show(new Project({app: app}));
 				});
 			}
 		},

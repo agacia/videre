@@ -1,10 +1,18 @@
 <div class="monitor">
-	<div class="message">
-	</div>	
-
 	
 	<div class="row">
 		<div class="col-xs-6">
+			
+			<label>Simulation time:</label>
+			<span class="clock">CLOCK</span>
+			<div class="player">
+				<span class="btn-group playerBtn" data-toggle="buttons">
+			        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
+			        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
+		        </span>
+			</div>
+			<div id="slider-wrapper"><div id="slider"></div></div>
+			<div class="map">MAP CONTAINER</div>
 			<form class="form-horizontal">
 				<div class="control-group">
 					<label class="control-label" for="selectAvailableDate">Date:</label>
@@ -21,16 +29,6 @@
 			  	<span class="add-on"><i class="glyphicon glyphicon-th"></i></span>
 			  </div>
 			</div> -->
-			<label>Simulation time:</label>
-			<span class="clock">CLOCK</span>
-			<div class="player">
-				<span class="btn-group playerBtn" data-toggle="buttons">
-			        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
-			        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
-		        </span>
-			</div>
-			<div id="slider-wrapper"><div id="slider"></div></div>
-			<div class="map">MAP CONTAINER</div>
 		</div>
 		<div class="col-xs-6">
 			<div class="row">
@@ -58,6 +56,9 @@
 		</div>
 	</div>
 	
+	<div class="row">
+		<div class="message"></div>
+	</div>	
 </div>
 
 <div class="newEvent window">
