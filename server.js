@@ -2,7 +2,8 @@ var config = require("./config.json"),
 	express = require("express"),
 	routes = require("./routes.js"),
 	dbs = require("./libs/connectDbs.js"),
-	app = express();
+	app = express(),
+	moment = require('moment-timezone');;
 
 config.server.port = process.env.PORT || config.server.port || 6000;
 config.server.public_dir = process.env.PUBLIC_DIR || config.server.public_dir;

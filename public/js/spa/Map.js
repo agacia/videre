@@ -132,9 +132,76 @@ define([
 			clearPaths: function() {
 				this.svgOverlay.selectAll("g").remove();
 			},
-			updatePaths: function(currentTime) {
+			updateLinks: function(selector, links) {
+				var feature = selector.selectAll("path")
+					.data(links).enter();
+				var that = this;
+				var feature = selector.selectAll("path")
+					.data(links)
+					.style('stroke', function(d) {
+						return that.options.speedScale(d.speed);
+					})
+					.style('stroke-width', function(d) {
+						return that.options.flowScale(d.flow);
+					})
+					.style('opacity', function(d) {
+						return that.options.densityScale(d.density)*1000;
+					});
+				console.log("feature", feature)
+				// this.setMouseActions(collection, feature, currentTime);
+				this.reset();
+			},
+			updatePaths: function(route, links, currentTime) {
+				// console.log("route.links", route.links, "links", links)
+				var collection = {
+					"type":"FeatureCollection", 
+					"features": route.links, 
+					"route_id": route.id
+				};
+				var feature = route.group.selectAll("path")
+					.data(links).enter();
+				var that = this;
+				var feature = route.group.selectAll("path")
+					.data(links)
+					.style('stroke', function(d) {
+						var speed = Math.random()*40;
+						if (d.speed) {
+							speed = d.speed;
+						}
+						return that.options.speedScale(speed);
+						
+					})
+					.style('stroke-width', function(d) {
+						if (d.flow) {
+							return that.options.flowScale(d.flow);
+						}
+						return 10;
+					})
+					.style('opacity', function(d) {
+						if (d.density) {
+							return that.options.densityScale(d.density)*1000;
+						}
+						return 1;
+					});
+				// var feature = route.group.selectAll("path")
+				// 	.data(links)
+				// 	.style('stroke', function(d) {
+				// 		return that.options.speedScale(d.speed);
+				// 	})
+				// 	.style('stroke-width', function(d) {
+				// 		return that.options.flowScale(d.flow);
+				// 	})
+				// 	.style('opacity', function(d) {
+				// 		return that.options.densityScale(d.density)*1000;
+				// 	});
+				this.setMouseActions(collection, feature, currentTime);
+
+				// this.reset();
+			},
+			updateRoutes: function(currentTime) {
 				for (var i in this.project.scenario.routes) {
-					var route = this.project.scenario.routes[i];
+					var route = this.project.scenario.routes[i]
+					// console.log("route.links", route.links, "links", links)
 					var collection = {
 						"type":"FeatureCollection", 
 						"features": route.links, 
@@ -143,40 +210,121 @@ define([
 					var feature = route.group.selectAll("path")
 						.data(route.links).enter();
 					var that = this;
+					var currentPerformance = null;
 					var feature = route.group.selectAll("path")
 						.data(route.links)
 						.style('stroke', function(d) {
-							if (currentTime) {
-								for (var i in d.performance) {
-									if (d.performance[i]['timestamp'] == currentTime) {
-										return that.options.speedScale(d.performance[i]['speed']);
-									}
+							var speed = Math.random()*40;
+							if (d.performance) {
+								currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
+								if (currentPerformance.length > 0) {
+									speed = currentPerformance[0].speed;
 								}
+								// console.log("time ", currentTime, "d", d, "performance ", currentPerformance, "speed", speed);
 							}
-							return "green";
+							return that.options.speedScale(speed);
+							
 						})
 						.style('stroke-width', function(d) {
-							if (currentTime) {
-								for (var i in d.performance) {
-									if (d.performance[i]['timestamp'] == currentTime) {
-										return that.options.flowScale(d.performance[i]['flow']);
-									}
+							var flow = 10;
+							if (d.performance) {
+								currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
+								if (currentPerformance.length > 0) {
+									flow = currentPerformance[0].flow;
 								}
+								// console.log("time ", currentTime, "d", d, "performance ", currentPerformance, "flow", flow);
+								// currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
+								// console.log("flow", currentPerformance.flow);
+								return that.options.flowScale(flow);
 							}
-							return 10;
+							return flow;
 						})
 						.style('opacity', function(d) {
-							if (currentTime) {
-								if (d.performance[i]['timestamp'] == currentTime) {
-									// console.log("density", d.performance[i]['density'], that.options.densityScale(d.performance[i]['density']))
-									return that.options.densityScale(d.performance[i]['density'])*1000;
-								}	
+							var density = 1;
+							if (d.performance) {
+								currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
+								if (currentPerformance.length > 0) {
+									density = currentPerformance[0].density;
+								} that.options.densityScale(density)*1000;
 							}
 							return 1;
 						});
+					// var feature = route.group.selectAll("path")
+					// 	.data(links)
+					// 	.style('stroke', function(d) {
+					// 		return that.options.speedScale(d.speed);
+					// 	})
+					// 	.style('stroke-width', function(d) {
+					// 		return that.options.flowScale(d.flow);
+					// 	})
+					// 	.style('opacity', function(d) {
+					// 		return that.options.densityScale(d.density)*1000;
+					// 	});
 					this.setMouseActions(collection, feature, currentTime);
 				}
-
+				// this.reset();
+			},
+			initializeLinks: function(links, currentTime, onclick) {
+				var collection = {
+					"type":"FeatureCollection", 
+					"features": links, 
+					"route_id": route.id
+				};
+				// create svg group  
+				this.project.scenario.bottomLeft = null;
+				this.project.scenario.topRight = null;
+				route.bounds = d3.geo.bounds(collection);
+				route.group = group.append("g").attr("class", "leaflet-zoom-hide route").attr("id", collection.route_id);
+				var bottomLeft = this.projection(route.bounds[0]);
+				var topRight = this.projection(route.bounds[1]);
+				if (this.project.scenario.bottomLeft === null) {
+					this.project.scenario.bottomLeft = route.bounds[0];
+					this.project.scenario.topRight = route.bounds[1];
+				}
+				if (bottomLeft[0] < this.projection(this.project.scenario.bottomLeft)[0]) {
+					this.project.scenario.bottomLeft[0] = route.bounds[0][0];
+				}
+				if (bottomLeft[1] < this.projection(this.project.scenario.bottomLeft)[1]) {
+					this.project.scenario.bottomLeft[1] = route.bounds[0][1];
+				}
+				if (topRight[0] > this.projection(this.project.scenario.topRight)[0]) {
+					this.project.scenario.topRight[0] = route.bounds[1][0];
+				}
+				if (topRight[1] > this.projection(this.project.scenario.topRight)[1]) {
+					this.project.scenario.topRight[1] = route.bounds[1][1];
+				}
+				var that = this;
+				route.path = d3.geo.path().projection(function(x) {
+					return that.projection(x);
+				});  
+				var feature = route.group.selectAll("path")
+					.data(collection.features)
+					.enter().append("path");
+				feature.attr("d", route.path);
+				feature.attr("route_id", collection.route_id);
+				var that = this;
+				feature
+					.style('stroke', function(d) {
+						if (currentTime) {
+							var speed = Math.random()*40;
+							return that.options.speedScale(speed);
+						}
+						return "green";
+					})
+					.style('stroke-width', function(d) {
+						if (currentTime) {
+							return that.options.flowScale(d.performance.data.flow);
+						}
+						return 10;
+					})
+					.style('opacity', function(d) {
+						if (currentTime) {
+							return that.options.densityScale(d.performance.data.density)+1000;
+						}
+						return 1;
+					})
+				//this.map.on("viewreset", this.reset, this);
+				this.setMouseActions(collection, feature, currentTime);
 				this.reset();
 			},
 			initializePaths: function(group, route, currentTime, onclick) {

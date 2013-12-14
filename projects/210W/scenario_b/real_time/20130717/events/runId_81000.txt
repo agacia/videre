@@ -1,2 +1,0 @@
-eventId1_a	starttime	endtime	location	textual description
-eventId2_a	starttime2	endtime2	location2	textualt description2

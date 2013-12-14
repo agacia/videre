@@ -19,7 +19,8 @@
     "mongodb": "~1.2.14",
     "xml2json": "*",
     "d3": "3.2.7",
-    "csv": "* "
+    "csv": "* ",
+    "moment-timezone": "*"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

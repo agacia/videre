@@ -105,14 +105,14 @@ margin: 8px;
 	width: 500px;
 }
 
-path {
+.map_item path {
   stroke-width: 5px;
   stroke: #19B8FF ;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
-path.hover {
+.map_item path.hover {
   stroke-width: 10px;
   stroke: #19B8FF;
   stroke-linejoin: round;
@@ -142,6 +142,13 @@ div.window {
 
 /* charts */
 
+path {
+  stroke-width: 1px;
+  stroke: black ;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
 vega canvas.marks {
 
 }
@@ -158,6 +165,10 @@ vega canvas.marks {
   top: 0;
   left: 0;
   z-index: 100;
+}
+
+.brush-handle:hover {
+  cursor: pointer;
 }
 
 .events-feed {
@@ -192,4 +203,42 @@ svg.sensors {
 
 .newEvent.window {
   display: none;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+.axis {
+  shape-rendering: crispEdges;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke-width: .5px;
+}
+
+.x.axis path {
+  stroke: #000;
+}
+
+.x.axis line {
+  stroke: #fff;
+  stroke-opacity: .5;
+}
+
+.y.axis line {
+  stroke: #ddd;
+}
+
+path.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+rect.pane {
+  cursor: move;
+  fill: none;
+  pointer-events: all;
 }

@@ -4,6 +4,7 @@ var exports = module.exports = (function(){
 		csvparser = require('csv'),
 		d3 = require('d3'),
 		pathjs = require('path'),
+		moment = require('moment-timezone'),
 		dbs = {};
 	return {
 		connectDb: function (root, cb){
@@ -22,15 +23,19 @@ var exports = module.exports = (function(){
 							jsonResponse.events = { "events" : "dataarray"}
 							var dataPath = pathjs.join(scenarioPath, dataFolderName);
 							var dataReceived = 2 // performance + events
+							console.log("readTsvDataFolder data")
 							obj.readTsvDataFolder(dataPath, function(error, data) {
 								db.performance = data;
+								console.log("data read ", dataReceived, "dataPath", dataPath)
 								if (--dataReceived === 0) {
 									cb(error, db);
 								}
 							});
+							console.log("readTsvDataFolder events")
 							var eventsPath = pathjs.join(scenarioPath, eventsFolderName);
 							obj.readTsvDataFolder(eventsPath, function(error, data) {
 								db.events = data;
+								console.log("events read ", dataReceived)
 								if (--dataReceived === 0) {
 									cb(error, db);
 								}
@@ -45,6 +50,12 @@ var exports = module.exports = (function(){
 								var month = +result.datestamp.slice(4,6);
 								var day = result.datestamp.slice(6,8);
 								result.date = new Date(year, (month-1), day, 0, 0, 0, 0);
+
+								// console.log("folder date", result.date);
+								// var test = moment.tz(new Date(2013, 11, 18), "America/Los_Angeles").format()
+								// console.log("moment test date", test);
+								// var mom = moment.tz(new Date(year, (month-1), day), "America/Los_Angeles").format();
+								// console.log("moment folder date", mom);
 							}
 							return result; 
 						},
@@ -55,26 +66,33 @@ var exports = module.exports = (function(){
 								var dateValue = dayDate.valueOf();
 								var filenameBase = filename.split('.')[0];
 								result.runId = filenameBase.split('_')[0];
-								result.timestamp = filenameBase.split('_')[1];
+								result.timestamp = +filenameBase.split('_')[1];
+								// var base = new Date(dateValue);
+								// console.log("base date", base);
+								// var mom = moment().tz(base, "America/Los_Angeles").format();
+								// console.log("base moment", mom)
 								result.datetime = new Date(dateValue + result.timestamp * milisec);
+
 							}
 							return result; 
 						},
 						readTsvDataFolder: function(path, cb) {
+							// var now = new Date();
+							// console.log("now date", now, now.valueOf());
+							// var mom = moment().tz("America/Los_Angeles").format();
+							// console.log("now moment", mom)
 							try {
 								result = {};
 								var requestedDate = obj.parseFolder(path);
 								var pathJSON = pathjs.join(path, requestedDate.datestamp + ".json");
 								// load precomputed json file if exists
-								if (fs.existsSync(pathJSON)) {
-									result = fs.readFileSync(pathJSON, 'utf8');
-									result = JSON.parse(result);
-									cb(undefined, result);
-								}
-								else { // read all tsv files into json
+								// if (fs.existsSync(pathJSON)) {
+								// 	result = fs.readFileSync(pathJSON, 'utf8');
+								// 	result = JSON.parse(result);
+								// 	cb(undefined, result);
+								// }
+								// else { // read all tsv files into json
 									var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
-									// result.jsonArray = []
-									// var countReadFiles = 0;
 									result = []
 									for (var i in dataFilenames) {
 										var requestedDatetime = obj.parseFilename(dataFilenames[i], requestedDate.date);
@@ -86,28 +104,26 @@ var exports = module.exports = (function(){
 											for (var j in data) {
 												record = {}
 												record.id = data[j][0];
-												record.speed = data[j][1], 
-												record.density = data[j][2], 
-												record.flow = data[j][3] // todo which column is density and flow?
+												record.speed = +data[j][1], 
+												record.density = +data[j][2], 
+												record.flow = +data[j][3] // todo which column is density and flow?
 												record.date = requestedDatetime.datetime;
+												// record.dateValue = requestedDatetime.datetime.valueOf();
 												record.timestamp = requestedDatetime.timestamp;
+												// console.log(record.timestamp, new Date(record.date))
+												// if (record.id == "-1") {
+												// 	console.log("record.timestamp", record.timestamp, record.id,record.date, record.dateValue)
+													// console.log("600", record.timestamp, record.date);
+													// var mom = moment.tz(record.date, "America/Los_Angeles").format();
+													// console.log("600 moment", mom)
+												// }
 												result.push(record);
 											}
-											// result.jsonArray.push(
-											// {
-											// 	"file" : filepath,
-											// 	"fileName": dataFilenames[i],
-											// 	"data" : data
-											// });
-											// if (i == dataFilenames.length) {
-											// 	fs.writeFileSync(pathJSON, JSON.stringify(result))
-											// 	cb(undefined, result);
-											// }
 										}
 									}
 									fs.writeFileSync(pathJSON, JSON.stringify(result))
 									cb(undefined, result);	
-								}
+								
 							} catch(e) {
 								cb("Error: " + e);
 							}
