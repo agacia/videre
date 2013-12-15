@@ -14,6 +14,14 @@
 			<div id="slider-wrapper"><div id="slider"></div></div>
 			<div class="time-series"></div>
 			<div class="map">MAP CONTAINER</div>
+			<p>Current events: <span class="event-timestamp"></span></p>
+			<div class="events-feed">		
+			</div>
+			<div class="control-group">
+				<div class="controls">
+					<button type="button" name="addNewEventButton" class="btn addEvent">Add new event</button>
+				</div>
+			</div>
 			<form class="form-horizontal">
 				<div class="control-group">
 					<label class="control-label" for="selectAvailableDate">Date:</label>
@@ -33,22 +41,11 @@
 		</div>
 		<div class="col-xs-6">
 			<div class="row">
-				<p>Current events: <span class="event-timestamp"></span></p>
-				<div class="events-feed">		
-				</div>
-				<div class="control-group">
-					<div class="controls">
-						<button type="button" name="addNewEventButton" class="btn addEvent">Add new event</button>
-					</div>
-				</div>
 				<div class="route_selection_charts">
 					<h5>Routes:</h5>
 					<span></span>
 				</div>
-				<div class="chart">
-					<p>Please load data to show contourplots</p>
-				</div>
-				<div class="countourplot"></div>
+				<div id="heatmaps"></div>
 				<div class="control-group">
 					<div class="controls">
 						<button type="button" name="buttonPredict" class="btn predict">Go to prediction!</button>

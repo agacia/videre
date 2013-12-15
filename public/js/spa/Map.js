@@ -132,73 +132,62 @@ define([
 			clearPaths: function() {
 				this.svgOverlay.selectAll("g").remove();
 			},
-			updateLinks: function(selector, links) {
-				var feature = selector.selectAll("path")
-					.data(links).enter();
-				var that = this;
-				var feature = selector.selectAll("path")
-					.data(links)
-					.style('stroke', function(d) {
-						return that.options.speedScale(d.speed);
-					})
-					.style('stroke-width', function(d) {
-						return that.options.flowScale(d.flow);
-					})
-					.style('opacity', function(d) {
-						return that.options.densityScale(d.density)*1000;
-					});
-				console.log("feature", feature)
-				// this.setMouseActions(collection, feature, currentTime);
-				this.reset();
-			},
-			updatePaths: function(route, links, currentTime) {
-				// console.log("route.links", route.links, "links", links)
-				var collection = {
-					"type":"FeatureCollection", 
-					"features": route.links, 
-					"route_id": route.id
-				};
-				var feature = route.group.selectAll("path")
-					.data(links).enter();
-				var that = this;
-				var feature = route.group.selectAll("path")
-					.data(links)
-					.style('stroke', function(d) {
-						var speed = Math.random()*40;
-						if (d.speed) {
-							speed = d.speed;
-						}
-						return that.options.speedScale(speed);
+			// updateLinks: function(selector, links) {
+			// 	var feature = selector.selectAll("path")
+			// 		.data(links).enter();
+			// 	var that = this;
+			// 	var feature = selector.selectAll("path")
+			// 		.data(links)
+			// 		.style('stroke', function(d) {
+			// 			return that.options.speedScale(d.speed);
+			// 		})
+			// 		.style('stroke-width', function(d) {
+			// 			return that.options.flowScale(d.flow);
+			// 		})
+			// 		.style('opacity', function(d) {
+			// 			return that.options.densityScale(d.density)*1000;
+			// 		});
+			// 	console.log("feature", feature)
+			// 	// this.setMouseActions(collection, feature, currentTime);
+			// 	this.reset();
+			// },
+			// updatePaths: function(route, links, currentTime) {
+			// 	// console.log("route.links", route.links, "links", links)
+			// 	var collection = {
+			// 		"type":"FeatureCollection", 
+			// 		"features": route.links, 
+			// 		"route_id": route.id
+			// 	};
+			// 	var feature = route.group.selectAll("path")
+			// 		.data(links).enter();
+			// 	var that = this;
+			// 	var feature = route.group.selectAll("path")
+			// 		.data(links)
+			// 		.style('stroke', function(d) {
+			// 			var speed = Math.random()*40;
+			// 			if (d.speed) {
+			// 				speed = d.speed;
+			// 			}
+			// 			return that.options.speedScale(speed);
 						
-					})
-					.style('stroke-width', function(d) {
-						if (d.flow) {
-							return that.options.flowScale(d.flow);
-						}
-						return 10;
-					})
-					.style('opacity', function(d) {
-						if (d.density) {
-							return that.options.densityScale(d.density)*1000;
-						}
-						return 1;
-					});
-				// var feature = route.group.selectAll("path")
-				// 	.data(links)
-				// 	.style('stroke', function(d) {
-				// 		return that.options.speedScale(d.speed);
-				// 	})
-				// 	.style('stroke-width', function(d) {
-				// 		return that.options.flowScale(d.flow);
-				// 	})
-				// 	.style('opacity', function(d) {
-				// 		return that.options.densityScale(d.density)*1000;
-				// 	});
-				this.setMouseActions(collection, feature, currentTime);
-
-				// this.reset();
-			},
+			// 		})
+			// 		.style('stroke-width', function(d) {
+			// 			if (d.flow) {
+			// 				return that.options.flowScale(d.flow);
+			// 			}
+			// 			return 10;
+			// 		})
+			// 		.style('opacity', function(d) {
+			// 			if (d.density) {
+			// 				return that.options.densityScale(d.density)*1000;
+			// 			}
+			// 			return 1;
+			// 		});
+			// 	this.setMouseActions(collection, feature, currentTime);
+			// 	this.reset();
+			// },
 			updateRoutes: function(currentTime) {
+				// console.log("update")
 				for (var i in this.project.scenario.routes) {
 					var route = this.project.scenario.routes[i]
 					// console.log("route.links", route.links, "links", links)
@@ -220,9 +209,8 @@ define([
 								if (currentPerformance.length > 0) {
 									speed = currentPerformance[0].speed;
 								}
-								// console.log("time ", currentTime, "d", d, "performance ", currentPerformance, "speed", speed);
 							}
-							return that.options.speedScale(speed);
+							return that.options.scale["speed"](speed);
 							
 						})
 						.style('stroke-width', function(d) {
@@ -232,10 +220,7 @@ define([
 								if (currentPerformance.length > 0) {
 									flow = currentPerformance[0].flow;
 								}
-								// console.log("time ", currentTime, "d", d, "performance ", currentPerformance, "flow", flow);
-								// currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
-								// console.log("flow", currentPerformance.flow);
-								return that.options.flowScale(flow);
+								return that.options.scale["flow"](flow);
 							}
 							return flow;
 						})
@@ -245,21 +230,10 @@ define([
 								currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
 								if (currentPerformance.length > 0) {
 									density = currentPerformance[0].density;
-								} that.options.densityScale(density)*1000;
+								} that.options.scale["density"](density)*1000;
 							}
 							return 1;
 						});
-					// var feature = route.group.selectAll("path")
-					// 	.data(links)
-					// 	.style('stroke', function(d) {
-					// 		return that.options.speedScale(d.speed);
-					// 	})
-					// 	.style('stroke-width', function(d) {
-					// 		return that.options.flowScale(d.flow);
-					// 	})
-					// 	.style('opacity', function(d) {
-					// 		return that.options.densityScale(d.density)*1000;
-					// 	});
 					this.setMouseActions(collection, feature, currentTime);
 				}
 				// this.reset();
@@ -413,25 +387,21 @@ define([
 				});
 				// custom tooltips
 				var div = d3.select("body").append("div").attr("class", "tooltip").style("opacity", 0);
-				var divInfo = d3.select("body").append("div")
-					.attr("class", "linkinfo window").style("opacity", 1)
-				divInfo.append("p").html("Link info")
-				divInfo.append("div").attr("class", "content");
+				// var divInfo = d3.select("body").append("div")
+				// 	.attr("class", "linkinfo window").style("opacity", 1)
+				// divInfo.append("p").html("Link info")
+				// divInfo.append("div").attr("class", "content");
 				var currentLink;
 				feature
 					.on("mouseover", function(d) {    
 					    var tooltipText = ""
 					    if (d.performance) {
-							if (currentTime) {
-								for (var i in d.performance) {
-									if (d.performance[i]['timestamp'] == currentTime) {
-										currentLink = d.performance[i];
-										// console.log("d.performance[i]", d.performance[i])
-										tooltipText += "<p>speed: " + d.performance[i]['speed'] + "</p>";
-										tooltipText += "<p>flow: " + d.performance[i]['flow'] + "</p>";
-										tooltipText += "<p>density: " + d.performance[i]['density'] + "</p>";
-									}
-								}
+					    	currentPerformance = crossfilter(d.performance).dimension(function(d) { return d.date;}).filter(currentTime).top(1);		
+							if (currentPerformance.length > 0) {
+								currentLink = currentPerformance[0];
+								tooltipText += "<p>speed: " + currentLink['speed'] + "</p>";
+								tooltipText += "<p>flow: " + currentLink['flow'] + "</p>";
+								tooltipText += "<p>density: " + currentLink['density'] + "</p>";
 							}
 						}
 						div.transition()        
@@ -447,10 +417,10 @@ define([
 							.style("opacity", 0);   
 					})
 					.on("click", function(d) {       
-						divInfo.transition()        
-							.duration(100)      
-							.style("opacity", 1);  
-						divInfo.select(".content").html("<p>"+currentLink['speed']+"</p>") 
+						// divInfo.transition()        
+						// 	.duration(100)      
+						// 	.style("opacity", 1);  
+						// divInfo.select(".content").html("<p>"+currentLink['speed']+"</p>") 
 					});
 				// twitter bootsrap tooltip
 				// feature.attr("data-toggle", "tooltip");
