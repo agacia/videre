@@ -133,6 +133,7 @@ define([
 			},
 			load: function(e){
 				if (e) e.preventDefault();
+				$("#loader").show()
 				$(this.ui.btnload.selector).button('loading');
 				$("#heatmaps-loader").show();
 				var that = this;
@@ -145,6 +146,7 @@ define([
 					},
 					function(data) {
 						if (data) {
+							$("#loader").hide()
 							that.ui.message.html("Data loaded! Interact with the map and charts.");	
 							$(that.ui.btnload.selector).button('reset');
 							$(that.ui.playbtn.selector).parent().removeClass('disabled');
@@ -272,7 +274,6 @@ define([
 				// read the time range and time step
 				this.startTime = timeSteps[0].key;
 				this.endTime = timeSteps[timeSteps.length-1].key;
-				
 				// set slider and clock for the first time
 				this.initialiseSlider(this.startTime.valueOf(), this.startTime.valueOf(), this.endTime.valueOf(), this.simulationStep * this.timerDelay); // todo lastSimulation step 
 				this.currentTime = this.startTime;
@@ -464,7 +465,6 @@ define([
 			initializeRouteSelection: function() {
 				// populates checkboxes with route names
 				var routeSelect = d3.select(".route_selection span");
-				// console.log("routeselect", routeSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
 				routeSelect.selectAll("label").remove();
 				routeSelect.selectAll("input").remove();
 				routeSelect.selectAll("input")
@@ -482,12 +482,10 @@ define([
 						if (ele.is(':checked')){
 							ele.attr('checked', true);
 							d3.select("g#"+routeId).style("display","block");
-							// d3.select(".contourplot."+routeId).style("display","block");
 						}
 						else {
 							ele.attr('checked', false);
 							d3.select("g#"+routeId).style("display","none");
-							// d3.select(".contourplot."+routeId).style("display","none");
 						}
 					});	
 			},
@@ -552,7 +550,6 @@ define([
 				this.app.showPrediction();
 			},
 			gotEventsData: function(data) {
-				console.log("events ", data)
 				var cf = crossfilter(data);
 				this.loadedEvents = cf.dimension(function(d) { 
 					var ddate = new Date(d.date); // ! save datetime in the correct timezone
@@ -566,7 +563,6 @@ define([
 				if (this.loadedEvents) {
 					currentEvents = this.loadedEvents.filter(this.currentTime).top(Infinity);
 					if (currentEvents.length > 0) {
-						console.log("currentEvents", currentEvents)
 						d3.select(this.ui.eventsfeed.selector).selectAll(this.ui.eventel.selector)
 							.data(currentEvents)
 							.enter()
@@ -586,10 +582,8 @@ define([
 					}
 				}
 				this.app.currentEvents = currentEvents;
-				
 			},
 			initialiseSlider: function(value, min, max, step) {
-				// console.log(value, min, max, step)
 				if (this.slider) {  
 					d3.select(".slider").remove(); 
 				   	$("#slider-wrapper").append("<div id='slider'></div>");
@@ -706,7 +700,6 @@ define([
 					.call(yAxis);
     		},
     		drawContourPlot: function(route, options) { // actually draws the contour plot with the loaded data
-    			// console.log("drawing contourplot ", route, options)
     			var width =  options.width;
     			var height =  options.height;
     			var margin = options.margin;
@@ -722,7 +715,6 @@ define([
 					.range([0,height - margin.bottom])
 					.domain([0,data[data.length-1].properties.offset]);		
 				var hourTimeFormat = function(d) { 
-					// console.log(d , d/3600)
 					return d/3600;
 					return d.getHours(); 
 				};
@@ -780,7 +772,6 @@ define([
 						})
 						.style("stroke", "none")
 						.on ("mouseover", function(d) {
-							// console.log("todo show tooltip about data", d)
 						});;
 				var gXAxis = chartarea
 					.append("g")
@@ -894,7 +885,6 @@ define([
     				_svg = svg;
     			}
     			series.setData = function(data) {
-    				// console.log("setData data", data);
     				_data = data;
     				_x.domain([data[0].key, data[data.length-1].key]);
 					_y.domain([0, d3.max(data, function(d) { return d.value; })]);

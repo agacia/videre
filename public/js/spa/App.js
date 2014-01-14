@@ -35,7 +35,7 @@ define([
 				},
 				success: function(data){
 					app.projects = data;
-					console.log("/listProjects data", data);
+					// console.log("/listProjects data", data);
 					cbSuccess();
 				}
 			});
@@ -69,7 +69,7 @@ define([
 					app.selectedProjectname = projectname;
 					var selectedProject = _.find(app.projects, function(obj) { return obj.projectname === projectname; });
 					selectedProject.scenario = data
-					console.log("/readScenario", selectedProject)
+					// console.log("/readScenario", selectedProject)
 					cbSuccess();
 				}
 			});

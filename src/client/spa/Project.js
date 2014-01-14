@@ -25,7 +25,7 @@ define([
 				this.populateProjects(this.app.projects);
 				this.ui.projectname.focus();
 				if (this.app.selectedProjectname) {
-					this.ui.message.html("Project and scenario " + this.app.selectedProjectname + "loaded! Go to realtime / monitor or prediction view");	
+					this.ui.message.html("Project and scenario " + this.app.selectedProjectname + " loaded! Go to realtime / monitor or prediction view");	
 				}
 				$(this.ui.clock.selector).text(new Date());
 			},

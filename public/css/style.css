@@ -398,3 +398,42 @@ border-color: #80A894 !important;
 .prediction_view input[type="number"] {
   width: 100px;
 }
+
+.loader {
+  display: none;
+  background-color: #fff;
+  /*background-opacity: 0.5;*/
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 1300;
+}
+
+.loader-content {
+  position:absolute;
+  top:45%;
+  left:50%;
+  margin-top:-52px;
+  margin-left:-32px;
+  width: 70px;
+  height: 150px;
+  text-align: center;
+}
+.loader-content h5 {
+  margin-top: 20px;
+}
+.loader-content .progress-bar, .loader-content h4 {
+  height: 20px;
+  width: 100px;
+  margin-left:-15px;
+  margin-top: 10px;
+}
+
+img.loader-image {
+  z-index: 1000;
+  width: 64px;
+  height: 64px;
+  opacity: 0.5;
+  border: none;
+  background: #fff url('../img/loader.gif') no-repeat center center;
+}

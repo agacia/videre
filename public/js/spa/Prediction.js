@@ -44,14 +44,9 @@ define([
 						var routeId = ele.attr("id");
 						if (ele.is(':checked')){
 							ele.attr('checked', true);
-							d3.select("g#"+routeId).style("display","block");
-							console.log("show ", d3.select(".contourplot."+routeId), routeId)
-							d3.select(".contourplot."+routeId).style("display","block");
 						}
 						else {
 							ele.attr('checked', false);
-							d3.select("g#"+routeId).style("display","none");
-							d3.select(".contourplot."+routeId).style("display","none");
 						}
 					});	
 			},
