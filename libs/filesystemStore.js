@@ -13,6 +13,7 @@ var exports = module.exports = (function(){
 					realTimeFolderName = "real_time", 
 					dataFolderName = "data",
 					dataFileExt = "txt",
+					eventsFileExt = "txt",
 					eventsFolderName = "events",
 					obj = {
 						readScenarioData: function(projectname, scenarioname, date, cb) {
@@ -24,18 +25,18 @@ var exports = module.exports = (function(){
 							var dataPath = pathjs.join(scenarioPath, dataFolderName);
 							var dataReceived = 2 // performance + events
 							console.log("readTsvDataFolder data")
-							obj.readTsvDataFolder(dataPath, function(error, data) {
+							obj.readTsvDataFolder(dataPath, dataFileExt, function(error, data) {
 								db.performance = data;
-								console.log("data read ", dataReceived, "dataPath", dataPath)
+								// console.log("data read ", dataReceived, "dataPath", dataPath)
 								if (--dataReceived === 0) {
 									cb(error, db);
 								}
 							});
 							console.log("readTsvDataFolder events")
 							var eventsPath = pathjs.join(scenarioPath, eventsFolderName);
-							obj.readTsvDataFolder(eventsPath, function(error, data) {
+							obj.readTsvEventsFolder(eventsPath, eventsFileExt, function(error, data) {
 								db.events = data;
-								console.log("events read ", dataReceived)
+								// console.log("events read ", dataReceived, data)
 								if (--dataReceived === 0) {
 									cb(error, db);
 								}
@@ -76,13 +77,13 @@ var exports = module.exports = (function(){
 							}
 							return result; 
 						},
-						readTsvDataFolder: function(path, cb) {
+						readTsvDataFolder: function(path, fileext, cb) {
 							// var now = new Date();
 							// console.log("now date", now, now.valueOf());
 							// var mom = moment().tz("America/Los_Angeles").format();
 							// console.log("now moment", mom)
 							try {
-								result = {};
+								result = [];
 								var requestedDate = obj.parseFolder(path);
 								var pathJSON = pathjs.join(path, requestedDate.datestamp + ".json");
 								// load precomputed json file if exists
@@ -92,8 +93,7 @@ var exports = module.exports = (function(){
 								// 	cb(undefined, result);
 								// }
 								// else { // read all tsv files into json
-									var dataFilenames = obj.getFilesNamesSync(path, dataFileExt);
-									result = []
+									var dataFilenames = obj.getFilesNamesSync(path, fileext);
 									for (var i in dataFilenames) {
 										var requestedDatetime = obj.parseFilename(dataFilenames[i], requestedDate.date);
 										var filepath = pathjs.join(path, dataFilenames[i]);
@@ -167,6 +167,42 @@ var exports = module.exports = (function(){
 							// 		}
 							// 	});
 							// }
+						},
+						readTsvEventsFolder: function(path, fileext, cb) {
+							try {
+								var requestedDate = obj.parseFolder(path);
+								var pathJSON = pathjs.join(path, requestedDate.datestamp + ".json");
+								var dataFilenames = obj.getFilesNamesSync(path, fileext);
+								result = []
+								for (var i in dataFilenames) {
+									var requestedDatetime = obj.parseFilename(dataFilenames[i], requestedDate.date);
+									var filepath = pathjs.join(path, dataFilenames[i]);
+									var stats = fs.lstatSync(filepath);
+									if (stats.isFile()) {
+										var dataTvs = fs.readFileSync(filepath);
+										var data = d3.tsv.parseRows(dataTvs.toString());
+										// eventId1	starttime	endtime	location	textual description
+										for (var j in data) {
+											record = {}
+											record.id = data[j][0];
+											record.starttime = data[j][1]; 
+											record.endtime = data[j][2];
+											record.location = data[j][3];
+											record.description = data[j][4]
+											record.type = data[j][5]
+											record.severity = +data[j][6]
+											record.date = requestedDatetime.datetime;
+											record.timestamp = requestedDatetime.timestamp;
+											result.push(record);
+										}
+									}
+								}
+								fs.writeFileSync(pathJSON, JSON.stringify(result))
+								cb(undefined, result);	
+								
+							} catch(e) {
+								cb("Error: " + e);
+							}
 						},
 						readLines: function(input, func) {
 							var remaining = '';
@@ -321,6 +357,7 @@ var exports = module.exports = (function(){
 										link = network.links.features[j];
 										if (link.properties.type == "freeway") {
 											route.linkIds.push(link.properties.id);
+											link.properties.routeId = route.id;
 										}
 										// if (link.properties.type == "HOV") {
 										// 	HOVroute.linkIds.push(link.properties.id);

@@ -1,2 +1,1 @@
-eventId1	starttime	endtime	location	textual description
-eventId2	starttime2	endtime2	location2	textualt description2
+eventId2	Wed Jul 17 2013 00:10:00 GMT-0700 (PDT)	Wed Jul 17 2013 06:00:00 GMT-0700 (PDT)	scenario	Heavy rain	weather		4

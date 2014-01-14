@@ -3,7 +3,9 @@ define([
 	"spa/Map"
 	],
 	function(templates, Map){
+		var mileScale = {}
 		var MonitorLayout = Backbone.Marionette.Layout.extend({
+			
 			template: function(){
 				return window.JST["monitorlayout.html"];
 			},
@@ -21,7 +23,7 @@ define([
 				btnload: ".btn.load",
 				slider: "#slider",
 				contourplot: ".contourplot",
-				eventsfeed: ".events-feed",
+				eventsfeed: ".event-list",
 				eventel: ".event",
 				timebrush: ".timebrush"
 			},
@@ -41,8 +43,10 @@ define([
 				this.startTime = this.currentTime;
 				this.endTime - this.startTime;
 				this.performanceByTime = null;
-				this.timeBrushWidth = 0;
-			    this.timeBrushHeight = 0;
+				this.timeBrushWidth = 500;
+			    this.timeBrushHeight = 400;
+			    this.timeScale = null;
+				// this.mileScale = {}
 				// if performance is already loaded	
 				if (this.app.selectedProject.performance) {
 					// todo show the loaded performance
@@ -52,7 +56,7 @@ define([
 			onShow: function() { 
 				this.contourPlotOptions = {
 					"class" : this.ui.contourplot.selector,
-					"width": 500,
+					"width": 400,
 					"height": 300,
 					"margin": {
 						"top": 0,
@@ -62,7 +66,7 @@ define([
 					},
 					"scale" : {
 						"speed": d3.scale.linear().domain([0, 32]).range(['red', 'green']),
-						"flow": d3.scale.linear().domain([0, 0.1]).range([2, 16]),
+						"flow": d3.scale.linear().domain([0, 0.1]).range([5, 20]),
 						"density": d3.scale.linear().domain([0, 1]).range([0, 1])
 					},
 					"domain": {
@@ -71,7 +75,16 @@ define([
 						"density": [0, 1]
 					}
 				}
-				this.metrics = ["speed", "flow", "density"];
+				$(".staticTooltip").draggable({handle: ".title"}); 
+				d3.selectAll('.staticTooltip .close').on('click', function(e) {
+		          var sel = d3.select(this);
+		          if (sel.attr('class') === "close") {
+		            var parent  = $(sel[0]).parent().parent();
+		            if (parent) { parent.hide(); }x
+		          }
+		        });
+				$(".project-info span").html("freeway " + this.app.selectedProject.projectname + " ");
+				this.metrics = ["flow", "density"];
 				// show map with routes (without performance)
 				this.mapViewItem = new Map({project: this.app.selectedProject});
 				this.map.show(this.mapViewItem);
@@ -79,7 +92,7 @@ define([
 				this.initialiseDateSelection();
 				this.initializeOverlaySelection();
 				this.initializeRouteSelection();
-				this.initializeRouteSelectionForCharts();
+				// this.initializeRouteSelectionForCharts();
 				this.initialiseSlider(0,0,1,1);
 			},
 			initialiseDateSelection: function() {
@@ -121,6 +134,7 @@ define([
 			load: function(e){
 				if (e) e.preventDefault();
 				$(this.ui.btnload.selector).button('loading');
+				$("#heatmaps-loader").show();
 				var that = this;
 				this.app.loadData(
 					this.app.selectedProject.projectname,
@@ -136,7 +150,7 @@ define([
 							$(that.ui.playbtn.selector).parent().removeClass('disabled');
 							$(that.ui.pausebtn.selector).parent().removeClass('disabled');
 							if (data.events) {
-								// that.gotEventsData(data.events);
+								that.gotEventsData(data.events);
 							}
 							if (data.performance) {
 								that.gotPerformanceData(data.performance);
@@ -181,15 +195,16 @@ define([
 			},
 			gotPerformanceData: function(data) {
 				if (!data || data.length < 1) {
-					console.log("Empty performance data");
 					return;
 				}
 				var cf = crossfilter(data);
 				var routes = this.app.selectedProject.scenario.routes;
 				
+			    this.timeScale = null;
+
 				// get performance for each route 
 				this.readPerformanceForRoutes(routes, cf);
-				console.log("routes with performanceData and link's performance", routes);
+				// console.log("routes with performanceData and link's performance", routes);
 				for (var routeId in routes) {
 					var route = routes[routeId];
 					var currentLink = null;
@@ -210,6 +225,7 @@ define([
 						d.date = ddate;
 						return d.id; 
 					});
+					
 				}
 				// get domain range for metrics
 				// var dimensions = {}
@@ -264,12 +280,20 @@ define([
 				
 				d3.select(".time-series").selectAll("*").remove();
 				this.createTimeSeries(".time-series", timeSteps);
-
+				$("#heatmaps-loader").hide();
 				for (var routeId in routes) {
 					var countourplotClass = routes[routeId].id;
 					d3.select("#heatmaps").append("div").attr("class", countourplotClass);
-					this.createCountourPlot(countourplotClass, routes[routeId].performanceData, 600, 400);
+					this.createCountourPlot(countourplotClass, routes[routeId].performanceData, 500, 300);
+					var maxOffset = d3.max(route.performanceByLink.top(Infinity), function(d) { return d.offset; });
+					mileScale[routes[routeId].id] = d3.time.scale()
+				    	.domain([0, maxOffset])
+				    	.rangeRound([0, this.timeBrushHeight]);
 				}
+				this.timeScale = d3.time.scale()
+			    	.domain([this.startTime.valueOf(), this.endTime.valueOf()])
+			    	.rangeRound([0, this.timeBrushWidth]);
+			    
 			},
 			createCountourPlot: function(selector, data, width, height) {
     			var chartGroup = "chartGroup";
@@ -280,7 +304,7 @@ define([
 		            d.mile = Math.floor(d.offset)
 		        });
 			    // timeOfLinkDimension = cf.dimension(function(d) { return [+d.hour, +d.id]; });
-			    timeOfLinkDimension = cf.dimension(function(d) { return [d.hour, d.mile]; });
+			    var timeOfLinkDimension = cf.dimension(function(d) { return [d.hour, d.mile]; });
 	            var valueByTimeOfLinkGroup = timeOfLinkDimension.group().reduce(
 	                function (p, v) {
 	                    ++p.count;
@@ -321,7 +345,7 @@ define([
 			        	.append("div").attr("class",countourplotClass);
 			        heatmapCharts[metric] = dc.heatMap("."+countourplotClass, chartGroup);
 					heatColorMappings[metric] = function(d) {
-		                return d3.scale.linear().domain([0, max]).range(['red', 'green'])(d);    
+		                return d3.scale.linear().domain([0, max]).range(['green', 'red'])(d);    
 			        };
 			        heatColorMappings[metric].domain = function() {
 			        	return [0,max];
@@ -351,7 +375,7 @@ define([
 						.attr('height', this.timeBrushHeight)
 	    				.attr('transform', 'translate(0, ' + (0) + ')')
 					timebrush.append('rect')
-						.attr('class', 'brush-handle')
+						.attr('class', 'time-brush-handle')
 						.attr("width", 1)
 						.attr("height", this.timeBrushHeight)
 						.attr("x", 0)
@@ -359,7 +383,15 @@ define([
 					timebrush.append('rect')
 						.attr('class', 'brush-axis')
 						.attr("width", this.timeBrushWidth)
-						.attr("height", 2);
+						.attr("height", 2)
+						.attr("transform", "translate(" + 0 + "," + this.timeBrushHeight + ")");
+					timebrush.append('rect')
+						.attr('class', 'mile-brush-handle')
+						.attr("width", this.timeBrushWidth)
+						.attr("height", 1)
+						.attr("x", 0)
+						.attr("y", 0)
+						.attr("transform", "translate(" + 0 + "," + this.timeBrushHeight + ")");	
 		        }
 
 		        // var hourlyDimension = cf.dimension(function (d) { return +d.hour; });
@@ -399,10 +431,10 @@ define([
 			},
 			// ui 
 			showAddEvent: function() {
-				$(".newEvent.window").show();
+				$(".newEvent.staticTooltip").show();
 			},
 			hideAddEvent: function() {
-				$(".newEvent.window").hide();
+				$(".newEvent.staticTooltip").hide();
 			},
 			onChangeAvailableDate: function(date) {
 				this.pause();
@@ -431,7 +463,7 @@ define([
 			},
 			initializeRouteSelection: function() {
 				// populates checkboxes with route names
-				var routeSelect = d3.select(".route_routesn span");
+				var routeSelect = d3.select(".route_selection span");
 				// console.log("routeselect", routeSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
 				routeSelect.selectAll("label").remove();
 				routeSelect.selectAll("input").remove();
@@ -520,33 +552,38 @@ define([
 				this.app.showPrediction();
 			},
 			gotEventsData: function(data) {
-				if (!(this.dateName in this.loadedDates)) {
-					this.loadedDates[this.dateName] = {}
-				}
-				this.loadedDates[this.dateName].events = this.sortByTimestamp(data);
+				console.log("events ", data)
+				var cf = crossfilter(data);
+				this.loadedEvents = cf.dimension(function(d) { 
+					var ddate = new Date(d.date); // ! save datetime in the correct timezone
+					d.date = ddate;
+					return d.date; 
+				});
 				this.udpateEventFeed();
 			},
 			udpateEventFeed: function() {
 				var currentEvents = []
-				for (var i in this.loadedDates[this.dateName].events) {
-					var eventData = this.loadedDates[this.dateName].events[i]
-					if (eventData['timestamp'] == this.currentTime) {
-						d3.select('.event-timestamp')
-							.text(eventData['timestamp'])
-						currentEvents = eventData['data']
-						break;
+				if (this.loadedEvents) {
+					currentEvents = this.loadedEvents.filter(this.currentTime).top(Infinity);
+					if (currentEvents.length > 0) {
+						console.log("currentEvents", currentEvents)
+						d3.select(this.ui.eventsfeed.selector).selectAll(this.ui.eventel.selector)
+							.data(currentEvents)
+							.enter()
+								.append('div')
+								.attr('class','event')
+								.append('span')
+									.attr('class', function(d) { return "image " + d.type; })
+						d3.selectAll(this.ui.eventel.selector)
+							.data(currentEvents)
+							.select('.image')
+							.attr('class', function(d) { 
+								return 'image ' + d.type; 
+							})
 					}
-				}
-				if (currentEvents.length > 0) {
-					d3.select(this.ui.eventsfeed.selector).selectAll(this.ui.eventel.selector)
-						.data(currentEvents)
-						.enter()
-							.append('div')
-							.attr('class','event')
-							.append('span')
-					d3.selectAll(this.ui.eventel.selector)
-						.data(currentEvents)
-						.text(function(d) { return 'Event: ' + d })
+					else {
+						d3.select(this.ui.eventsfeed.selector).selectAll(this.ui.eventel.selector).remove()
+					}
 				}
 			},
 			initialiseSlider: function(value, min, max, step) {
@@ -568,7 +605,7 @@ define([
 			    this.slider = $(this.ui.slider.selector)
 			    	.slider(options)
 				    .slider('setValue', new Date(value))
-					.width("100%")
+					// .width("100%")
 					.on('slide', function(event){
 						if (that.currentTime == event.value) return
 						that.currentTime = new Date(event.value);
@@ -596,15 +633,23 @@ define([
     		},
     		onTimeChange: function(time) {   		
 				this.updateClock(time);
+				// console.log("this.performanceByTime", this.performanceByTime)
 				if (this.performanceByTime) {
-					this.timeScale = d3.time.scale()
-				    	.domain([this.startTime.valueOf(), this.endTime.valueOf()])
-				    	.rangeRound([0, this.timeBrushWidth]);
-					d3.selectAll('.brush-handle')
+					if (!this.timeScale) {
+						this.timeScale = d3.time.scale()
+					    	.domain([this.startTime.valueOf(), this.endTime.valueOf()])
+					    	.rangeRound([0, this.timeBrushWidth]);
+					
+					}
+					d3.selectAll('.time-brush-handle')
 						.attr('transform',  "translate(" + this.timeScale(this.currentTime.valueOf()) + "," + 0 + ")");
-	    			this.mapViewItem.updateRoutes(this.currentTime);
+	    			this.mapViewItem.updateRoutes(this.currentTime, this.onMapLinkMouseOver);
 	    		}
-	   //  		this.udpateEventFeed()
+	    		this.udpateEventFeed()
+    		},
+    		onMapLinkMouseOver: function(d) {
+    			d3.selectAll('.mile-brush-handle')
+					.attr('transform',  "translate(0," + mileScale[d.properties.routeId](d.properties.offset) + ")");
     		},
     		timeSeries: function(data) {
     			var margin = {top: 10, right: 10, bottom: 40, left:40},
@@ -684,7 +729,7 @@ define([
 					.orient('bottom')
 					.tickFormat(hourTimeFormat);
 				var yAxis = d3.svg.axis()
-					.scale(yReverse)
+					.scale(y)
 					.orient('left');
 				var contourplot = d3.select(options.class + "." + route.id);
 				var chartarea = contourplot.select('.chart-area' + " svg")
@@ -701,7 +746,7 @@ define([
 						.attr('style', 'background-color: red')
 						//.attr('width', 10)
 						.attr('transform', function(d, i) { // i = index y 
-							return "translate(" + 0 + "," + yReverse(d.properties.offset) + ")";
+							return "translate(" + 0 + "," + y(d.properties.offset) + ")";
 						})
 				var cell = row.selectAll(".cell")
 					.data(function (d, i) { // i = index y
@@ -751,8 +796,8 @@ define([
 					.attr("width", width - margin.left - margin.right)
     				.attr("transform", "translate(" + margin.left + "," + 0 + ")");
 				gTimebrush.append('rect')
-					.attr('class', 'brush-handle')
-					.attr("width", 1)
+					.attr('class', 'time-brush-handle')
+					.attr("width", 3)
 					.attr("height", 30)
 					.attr("x", 0)
 					.attr("y", 0)
@@ -760,7 +805,9 @@ define([
 				gTimebrush.append('rect')
 					.attr('class', 'brush-axis')
 					.attr("width", options.width - options.margin.left)
-					.attr("height", 2);
+					.attr("height", 2)
+					.attr("x", 0)
+					.attr("y", 0)
     		},
     		zoomableTimeSeries: function() {
     			var _data
@@ -769,8 +816,8 @@ define([
     				, _area, _line
     				, _x, _y
     				, _zoom
-    				, margin = {top: 0, right: 60, bottom: 30, left: 0}
-    				, width = 500 - margin.left - margin.right
+    				, margin = {top: 10, right: 60, bottom: 30, left: 0}
+    				, width = 640 - margin.left - margin.right
     				, height = 100 - margin.top - margin.bottom;
     			function series(selection) {
 					var formatDate = d3.time.format("%H");
@@ -970,7 +1017,7 @@ define([
 	    				.attr('transform', 'translate(0, ' + (height) + ')')
 				
 					var timeBrushFocus = timebrush.append('g')
-						.attr('class', 'brush-handle')
+						.attr('class', 'time-brush-handle')
 						.attr("width", 20)
 						.attr("height", 20)
 						.attr("x", 0)

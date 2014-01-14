@@ -1,30 +1,34 @@
 <div class="monitor">
-	
-	<div class="row">
-		<div class="col-xs-6">
-			
-			<label>Simulation time:</label>
-			<span class="clock">CLOCK</span>
+
+	<div class="row project-info">	
+		<h4>Project: <span></span></h4>
+	</div>
+
+	<div class="col-xs-7">
+		
+		<div class="row">	
 			<div class="player">
 				<span class="btn-group playerBtn" data-toggle="buttons">
 			        <label class="btn btn-primary "><input type="radio" name="options" class="playBtn"><i class="glyphicon glyphicon-play"></i></input></label>
 			        <label class="btn btn-primary active"><input type="radio" name="options" class="pauseBtn"> <i class="glyphicon glyphicon-pause"></i></input></label>
 		        </span>
+		        <span id="slider-wrapper"><span id="slider"></span></span>
 			</div>
-			<div id="slider-wrapper"><div id="slider"></div></div>
-			<div class="time-series"></div>
-			<div class="map">MAP CONTAINER</div>
-			<p>Current events: <span class="event-timestamp"></span></p>
+		</div>
+		
+		<div class="row map-wrapper">
 			<div class="events-feed">		
+				<!-- <p>Current events:</p> -->
+				<span class="event-list"></span>
+				<span class="image"></span>
 			</div>
-			<div class="control-group">
-				<div class="controls">
-					<button type="button" name="addNewEventButton" class="btn addEvent">Add new event</button>
-				</div>
-			</div>
+			<div class="map">MAP CONTAINER</div>
+		</div>
+
+		<div class-"row">
 			<form class="form-horizontal">
 				<div class="control-group">
-					<label class="control-label" for="selectAvailableDate">Date:</label>
+					<label for="selectAvailableDate">Select date:</label>
 					<div class="controls">
 						<select class="select availabledate" name="selectAvailableDate"></select>
 						<button type="submit" class="btn load">Load</button>
@@ -39,31 +43,52 @@
 			  </div>
 			</div> -->
 		</div>
-		<div class="col-xs-6">
-			<div class="row">
-				<div class="route_selection_charts">
-					<h5>Routes:</h5>
-					<span></span>
-				</div>
-				<div id="heatmaps"></div>
-				<div class="control-group">
-					<div class="controls">
-						<button type="button" name="buttonPredict" class="btn predict">Go to prediction!</button>
-					</div>
-				</div>
-			</div>
+
+		<div class="row">
+			<h5>Average speed:</h5>
+			<div class="time-series"></div>
 		</div>
+		
+	</div>
+	<div class="col-xs-5">
+		
+		<div class="row">
+			<h4>Contour plots:</h4>
+			<h4 id="heatmaps-loader">Loading performance data...</h4>
+			<div id="heatmaps"></div>
+			<!-- <div class="route_selection_charts">
+				<h5>Routes:</h5>
+				<span></span>
+			</div>	-->
+		</div> 
+		
 	</div>
 	
-	<div class="row">
+	<div class="row clear">
+		<div class="control-group">
+			<div class="controls">
+				<button type="button" name="buttonPredict" class="btn predict">Go to prediction!</button>
+			</div>
+		</div>
+		<!-- <div class="control-group">
+			<div class="controls">
+				<button type="button" name="addNewEventButton" class="btn addEvent">Add new event</button>
+			</div>
+		</div> -->
+	</div>
+
+	<div class="row clear">
 		<div class="message"></div>
 	</div>	
 </div>
 
-<div class="newEvent window">
-	<div class"dragbar"></div>
+<div class="newEvent staticTooltip">
+	<div class"title">
+		<span class="text-info"></span>
+		<button type="button" class="close">x</button>
+	</div>
 	<button type="button" class="btn close btn-primary">OK</button>
-	<div class="content">
+	<div class="body">
 		<h2>Add new event</h2>
 		<div class="control-group">
 			<label class="control-label" for="eventName">Name:</label>
@@ -96,5 +121,6 @@
 				<button type="button" name="buttonSaveEvent" class="btn save">Save</button>
 			</div>
 		</div>
+		<div class="bg"></div>
 	</div>
 </div>

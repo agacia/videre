@@ -15,7 +15,8 @@ define([
 				projectname: "select.projectname",
 				scenarioname: "select.scenarioname",
 				message: "div.message",
-				btnload: ".btn.load"
+				btnload: ".btn.load",
+				clock: ".clock"
 			},
 			initialize: function() {
 				this.app = this.options.app; 
@@ -26,6 +27,7 @@ define([
 				if (this.app.selectedProjectname) {
 					this.ui.message.html("Project and scenario " + this.app.selectedProjectname + "loaded! Go to realtime / monitor or prediction view");	
 				}
+				$(this.ui.clock.selector).text(new Date());
 			},
 			populateProjects: function(projects) {
 				d3.select(this.ui.projectname.selector).selectAll("option").remove();
