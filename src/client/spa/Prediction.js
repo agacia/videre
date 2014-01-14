@@ -19,11 +19,13 @@ define([
 				this.initializeEventsSelection();
 				this.initializeStrategiesSelection();
 			},
+			initialize: function(){
+				this.app = this.options.app; 
+			},
 			initializeEventsSelection: function() {
 				// populates checkboxes with route names
-				var eventsList = 
-				[{ name:"event 1", id:"event1"},
-				{ name:"event 2", id:"event2"}];
+				var eventsList = this.app.currentEvents;
+				
 				var eventsSelect = d3.select(".events_selection span");
 				// console.log("eventsSelect", eventsSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
 				eventsSelect.selectAll("label").remove();
@@ -32,7 +34,7 @@ define([
 					.data(eventsList).enter()
 					.append('label')
 					.attr('for',function(d,i){ return d.id; })
-					.text(function(d) { return d.name; })
+					.text(function(d) { return d.description; })
 					.append("input")
 					.attr("checked", true)
 					.attr("type", "checkbox")
@@ -56,18 +58,17 @@ define([
 			initializeStrategiesSelection: function() {
 				// populates checkboxes with route names
 				var strategiesList = 
-				[{ name:"strategy 1", id:"strategy1"},
-				{ name:"strategy 2", id:"strategy2"}];
+				[{ name:"Ramp metering strategy for on-ramp no 70", id:"strategy1"},
+				{ name:"Reroute traffic to off-ramp no 71", id:"strategy2"},
+				{ name:"Do nothing", id:"strategy2"}];
 				var strategiesSelect = d3.select(".strategies_selection span");
 				// console.log("strategiesSelect", strategiesSelect, "this.app.selectedProject.scenario.routes;", this.app.selectedProject.scenario.routes);
-				strategiesSelect.selectAll("label").remove();
-				strategiesSelect.selectAll("input").remove();
-				strategiesSelect.selectAll("input")
+				strategiesSelect.selectAll(".strategy-el").remove();
+				var strategies = strategiesSelect.selectAll(".strategy-el")
 					.data(strategiesList).enter()
-					.append('label')
-					.attr('for',function(d,i){ return d.id; })
-					.text(function(d) { return d.name; })
-					.append("input")
+					.append('div')
+					.attr('class','strateg-el')
+				strategies.append("input")
 					.attr("checked", true)
 					.attr("type", "checkbox")
 					.attr("id", function(d,i) { return d.id; })
@@ -86,9 +87,13 @@ define([
 							d3.select(".contourplot."+routeId).style("display","none");
 						}
 					});	
+				strategies.append('label')
+					.attr('for',function(d,i){ return d.id; })
+					.text(function(d) { return d.name; })
+				
 			},
 			launchPrediction: function() {
-				console.log("launch prediction")
+				alert("This is a demo version. Please log in for full functionality.")
 			}
 		});
 		return Prediction;

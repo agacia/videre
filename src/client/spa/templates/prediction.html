@@ -1,5 +1,5 @@
-<div class="prediction_view">
-	<h2>Prediction view</h2>
+<div class="prediction_view wrapper">
+	<h2 class="selection">Prediction settings</h2>
 	<div class="events_selection selection">
 		<h5>Current events:</h5>
 		<span>
@@ -12,36 +12,32 @@
 
 		</span>
 	</div>
-	<div class="prediction_settings">
+	<div class="prediction_settings selection">
+		<h5>Simulation settings:</h5>
 		<div class="control-group">
-			<label class="control-label" for="predictionHorizon">Prediction horizon:</label>
-			<div class="controls">
-				<input type="text" name="predictionHorizon" />
-			</div>
+			<label class="control-label" for="predictionHorizon">Prediction horizon (in minutes):</label>
+			<input type="number" name="predictionHorizon" min="5" max="60" value="30" />
 		</div>
 		<div class="control-group">
-			<label class="control-label" for="timeGranularity">Time granularity:</label>
-			<div class="controls">
-				<input type="text" name="timeGranularity" />
-			</div>
+			<label class="control-label" for="timeGranularity">Time granularity (in minutes):</label>
+			<input type="number" name="timeGranularity" min="1" max="10" value="5" />
 		</div>
 		<div class="control-group">
-			<label class="control-label" for="spaceGranularity">Space granularity:</label>
-			<div class="controls">
-				<input type="text" name="spaceGranularity" />
-			</div>
+			<label class="control-label" for="spaceGranularity">Space granularity (in meters):</label>
+			<input type="number" name="spaceGranularity" min="100" max="1000" value="500" />
 		</div>
 		<div class="control-group">
 			<label class="control-label" for="accuracyLevel">Accuracy level:</label>
-			<div class="controls">
-				<input type="text" name="accuracyLevel" />
-			</div>
+			<input type="number" name="accuracyLevel"  min="1" max="10" value="5" />
 		</div>
 	</div>
-	<div class="control-group">
-		<label class="control-label" for="buttonPredict">Launh prediction:</label>
-		<div class="controls">
-			<button type="button" name="buttonPredict" class="btn predict">Go!</button>
+	<div class="selections">
+		<h5></h5>
+		<div class="control-group">
+			<label class="control-label" for="buttonPredict">Launh prediction:</label>
+			<div class="controls">
+				<button type="button" name="buttonPredict" class="btn predict">Launch prediction!</button>
+			</div>
 		</div>
 	</div>
 </div>

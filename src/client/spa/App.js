@@ -108,13 +108,13 @@ define([
 				this.layout.content.show(layout);
 			}
 			else {
-				this.showBlank("View " + options.mode + " not available!");
+				this.showBlank("Monitot view not available!");
 			}
 		},
 		showBlank: function(title) {
 			this.layout.content.show(new Blank({
 				title : title,
-				message : "No project!",
+				message : "No projects",
 				details : "Please load project first."
 			}));
 		},
@@ -127,7 +127,7 @@ define([
 				}
 			}
 			if (selectedProject) {
-				this.layout.content.show(new Prediction());
+				this.layout.content.show(new Prediction({app: this}));
 			}
 			else {
 				this.showBlank("View prediction not available!");

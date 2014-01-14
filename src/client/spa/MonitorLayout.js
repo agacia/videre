@@ -585,6 +585,8 @@ define([
 						d3.select(this.ui.eventsfeed.selector).selectAll(this.ui.eventel.selector).remove()
 					}
 				}
+				this.app.currentEvents = currentEvents;
+				
 			},
 			initialiseSlider: function(value, min, max, step) {
 				// console.log(value, min, max, step)
@@ -817,7 +819,7 @@ define([
     				, _x, _y
     				, _zoom
     				, margin = {top: 10, right: 60, bottom: 30, left: 0}
-    				, width = 640 - margin.left - margin.right
+    				, width = 540 - margin.left - margin.right
     				, height = 100 - margin.top - margin.bottom;
     			function series(selection) {
 					var formatDate = d3.time.format("%H");

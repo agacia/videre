@@ -1,0 +1,1 @@
+eventId1	Wed Jul 17 2013 00:20:00 GMT-0700 (PDT)	Wed Jul 17 2013 01:00:00 GMT-0700 (PDT)	-67	Accident reported	accident	7
